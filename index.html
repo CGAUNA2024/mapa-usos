@@ -1,1 +1,272 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Usos por Zona - Líneas Urbanas Corrientes</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"/>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', sans-serif; background: #1a1a2e; color: #eee; height: 100vh; display: flex; flex-direction: column; }
 
+#header {
+  background: linear-gradient(135deg, #16213e, #0f3460);
+  padding: 8px 14px;
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+  border-bottom: 2px solid #e94560;
+  flex-shrink: 0;
+}
+#header h1 { font-size: 14px; color: #e94560; white-space: nowrap; margin-bottom: 2px; }
+
+.fg { display: flex; flex-direction: column; gap: 2px; }
+.fg label { font-size: 10px; color: #aaa; text-transform: uppercase; letter-spacing: 0.5px; }
+.fg select, .fg input {
+  background: #0f3460; color: #fff;
+  border: 1px solid #e94560; border-radius: 4px;
+  padding: 4px 7px; font-size: 12px; min-width: 105px;
+}
+#btnFiltrar {
+  background: #e94560; color: white; border: none;
+  border-radius: 6px; padding: 6px 14px;
+  font-size: 12px; font-weight: bold; cursor: pointer;
+  margin-bottom: 1px;
+}
+#btnFiltrar:hover { background: #c73652; }
+
+#info-bar {
+  background: #16213e; padding: 4px 14px;
+  font-size: 11px; color: #aaa;
+  display: flex; gap: 16px; align-items: center;
+  flex-shrink: 0; border-bottom: 1px solid #333;
+}
+#info-bar b { color: #fff; }
+#map { flex: 1; }
+
+#legend {
+  position: absolute; bottom: 28px; right: 10px;
+  background: rgba(22,33,62,0.93);
+  border: 1px solid #444; border-radius: 8px;
+  padding: 8px 12px; z-index: 1000; font-size: 11px;
+}
+#legend h4 { color: #e94560; margin-bottom: 5px; font-size: 11px; }
+.li { display: flex; align-items: center; gap: 7px; margin: 3px 0; }
+.ld { width: 16px; height: 16px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.5); flex-shrink: 0; }
+
+#loading {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(22,33,62,0.97);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  z-index: 9999; gap: 14px;
+}
+#loading p { font-size: 15px; }
+#progress { width: 260px; height: 6px; background: #333; border-radius: 3px; overflow: hidden; }
+#progress-bar { height: 100%; width: 0%; background: #e94560; transition: width 0.3s; border-radius: 3px; }
+#prog-text { font-size: 12px; color: #aaa; }
+</style>
+</head>
+<body>
+
+<div id="loading">
+  <p>⏳ Cargando datos del mapa...</p>
+  <div id="progress"><div id="progress-bar"></div></div>
+  <div id="prog-text">Iniciando...</div>
+</div>
+
+<div id="header">
+  <div><h1>🗺 Usos por Zona — Líneas Urbanas Corrientes</h1></div>
+  <div class="fg">
+    <label>Línea</label>
+    <select id="selLinea"><option value="">— Todas —</option></select>
+  </div>
+  <div class="fg">
+    <label>Fecha desde</label>
+    <input type="date" id="fechaDesde"/>
+  </div>
+  <div class="fg">
+    <label>Fecha hasta</label>
+    <input type="date" id="fechaHasta"/>
+  </div>
+  <div class="fg">
+    <label>Sentido</label>
+    <select id="selSentido">
+      <option value="">— Ambos —</option>
+      <option value="Ida">Ida</option>
+      <option value="Vuelta">Vuelta</option>
+    </select>
+  </div>
+  <button id="btnFiltrar">▶ Aplicar</button>
+</div>
+
+<div id="info-bar">
+  <div>Zonas: <b id="lblZonas">0</b></div>
+  <div>Total usos: <b id="lblUsos">0</b></div>
+  <div>Línea: <b id="lblLinea">todas</b></div>
+  <div>Sentido: <b id="lblSentido">ambos</b></div>
+</div>
+
+<div id="map"></div>
+
+<div id="legend">
+  <h4>Usos por burbuja</h4>
+  <div class="li"><div class="ld" style="background:rgba(30,144,255,0.85)"></div> 1 – 99</div>
+  <div class="li"><div class="ld" style="background:rgba(255,165,0,0.85)"></div> 100 – 499</div>
+  <div class="li"><div class="ld" style="background:rgba(220,50,50,0.88)"></div> 500+</div>
+  <div style="margin-top:5px;color:#aaa;font-size:10px">Zoom para ver zonas individuales</div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+
+<script>
+var RAW_DATA = [];
+var map, clusterGroup;
+
+// ── mapa base ──────────────────────────────────────────────
+function initMap() {
+  map = L.map('map', { center: [-27.480, -58.813], zoom: 12 });
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap', maxZoom: 19
+  }).addTo(map);
+}
+
+// ── colores y tamaños ──────────────────────────────────────
+function getColor(u) {
+  return u >= 500 ? 'rgba(220,50,50,0.88)' : u >= 100 ? 'rgba(255,165,0,0.85)' : 'rgba(30,144,255,0.85)';
+}
+function getSize(u) {
+  if (u >= 1000) return 52; if (u >= 500) return 44; if (u >= 200) return 36;
+  if (u >= 100)  return 30; if (u >= 50)  return 24; if (u >= 20)  return 20;
+  return 16;
+}
+function fmt(n) { return n >= 1000 ? (n/1000).toFixed(1)+'k' : ''+n; }
+
+function mkIcon(usos, type) {
+  var c = getColor(usos), s = getSize(usos), l = fmt(usos);
+  var fs = s < 22 ? 9 : s < 30 ? 10 : 11;
+  return L.divIcon({
+    className: '',
+    html: '<div style="width:'+s+'px;height:'+s+'px;background:'+c+';border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;color:#fff;border:2px solid rgba(255,255,255,0.7);box-shadow:0 0 6px rgba(0,0,0,0.5);font-size:'+fs+'px;text-shadow:0 1px 2px rgba(0,0,0,0.9);">'+l+'</div>',
+    iconSize: [s,s], iconAnchor: [s/2,s/2]
+  });
+}
+
+// ── filtrar y dibujar ──────────────────────────────────────
+function applyFilters() {
+  var linea   = document.getElementById('selLinea').value;
+  var desde   = document.getElementById('fechaDesde').value;
+  var hasta   = document.getElementById('fechaHasta').value;
+  var sentido = document.getElementById('selSentido').value;
+
+  var zonaMap = {};
+  for (var i = 0; i < RAW_DATA.length; i++) {
+    var d = RAW_DATA[i];
+    if (linea   && d.l !== linea)   continue;
+    if (sentido && d.s !== sentido) continue;
+    if (desde   && d.f < desde)     continue;
+    if (hasta   && d.f > hasta)     continue;
+    var k = d.lat+'|'+d.lon+'|'+d.l+'|'+d.s;
+    if (!zonaMap[k]) zonaMap[k] = { lat:d.lat, lon:d.lon, linea:d.l, sentido:d.s, usos:0, fechas:[] };
+    zonaMap[k].usos += d.u;
+    zonaMap[k].fechas.push(d.f);
+  }
+
+  var zonas = Object.values(zonaMap);
+  var totalUsos = zonas.reduce(function(a,z){ return a+z.usos; }, 0);
+
+  document.getElementById('lblZonas').textContent = zonas.length.toLocaleString();
+  document.getElementById('lblUsos').textContent  = totalUsos.toLocaleString();
+  document.getElementById('lblLinea').textContent = linea || 'todas';
+  document.getElementById('lblSentido').textContent = sentido || 'ambos';
+
+  if (clusterGroup) map.removeLayer(clusterGroup);
+
+  clusterGroup = L.markerClusterGroup({
+    maxClusterRadius: 60,
+    iconCreateFunction: function(cluster) {
+      var total = cluster.getAllChildMarkers().reduce(function(a,m){ return a+(m._usos||0); },0);
+      return mkIcon(total, 'cluster');
+    },
+    disableClusteringAtZoom: 16,
+    showCoverageOnHover: false,
+    animate: true
+  });
+
+  for (var j = 0; j < zonas.length; j++) {
+    var z = zonas[j];
+    var fechasStr = z.fechas.sort().slice(0,3).join(', ') + (z.fechas.length > 3 ? ' (+' + (z.fechas.length-3) + ' más)' : '');
+    var m = L.marker([z.lat, z.lon], { icon: mkIcon(z.usos, 'marker') });
+    m._usos = z.usos;
+    m.bindPopup('<b>'+z.linea+'</b><br>📍 '+z.lat+', '+z.lon+'<br>🚌 Usos: <b>'+z.usos.toLocaleString()+'</b><br>↔ '+z.sentido+'<br>📅 '+fechasStr);
+    clusterGroup.addLayer(m);
+  }
+
+  map.addLayer(clusterGroup);
+  if (zonas.length > 0 && linea) {
+    try { map.fitBounds(clusterGroup.getBounds(), { padding: [40,40] }); } catch(e) {}
+  }
+}
+
+// ── cargar datos JSON externo ──────────────────────────────
+function setProgress(pct, txt) {
+  document.getElementById('progress-bar').style.width = pct + '%';
+  document.getElementById('prog-text').textContent = txt;
+}
+
+function loadData() {
+  setProgress(10, 'Conectando con el servidor...');
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', 'datos.json', true);
+  xhr.onprogress = function(e) {
+    if (e.lengthComputable) {
+      var p = Math.round(e.loaded / e.total * 80);
+      setProgress(10 + p, 'Descargando datos: ' + Math.round(e.loaded/1024) + ' KB');
+    }
+  };
+  xhr.onload = function() {
+    if (xhr.status === 200) {
+      setProgress(95, 'Procesando...');
+      try {
+        RAW_DATA = JSON.parse(xhr.responseText);
+        initFilters();
+        applyFilters();
+        setProgress(100, 'Listo');
+        setTimeout(function(){ document.getElementById('loading').style.display='none'; }, 400);
+      } catch(e) {
+        document.getElementById('prog-text').textContent = 'Error al procesar datos: ' + e.message;
+      }
+    } else {
+      document.getElementById('prog-text').textContent = 'Error al cargar datos (HTTP ' + xhr.status + ')';
+    }
+  };
+  xhr.onerror = function() {
+    document.getElementById('prog-text').textContent = 'Error de red. Verificá la conexión.';
+  };
+  xhr.send();
+}
+
+function initFilters() {
+  var lines = [...new Set(RAW_DATA.map(function(d){ return d.l; }))].sort();
+  var dates = [...new Set(RAW_DATA.map(function(d){ return d.f; }))].sort();
+  var sel = document.getElementById('selLinea');
+  lines.forEach(function(l){ var o=document.createElement('option'); o.value=l; o.textContent=l; sel.appendChild(o); });
+  if (dates.length > 0) {
+    document.getElementById('fechaDesde').value = dates[0];
+    document.getElementById('fechaHasta').value  = dates[dates.length-1];
+  }
+  document.getElementById('btnFiltrar').addEventListener('click', applyFilters);
+}
+
+// ── inicio ─────────────────────────────────────────────────
+window.addEventListener('load', function() {
+  initMap();
+  loadData();
+});
+</script>
+</body>
+</html>
