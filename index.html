@@ -226,10 +226,10 @@ function renderChartHoras(usosPorHora) {
     var x = h * (barW + gap);
     var y = H - barH;
 
-    // Color: azul → naranja → rojo
-    var color = ratio > 0.75 ? 'rgba(220,50,50,0.9)'
-              : ratio > 0.4  ? 'rgba(255,165,0,0.9)'
-                             : 'rgba(30,144,255,0.85)';
+    // Color degradado verde → amarillo → rojo según ratio (0=rojo, 1=verde)
+    var r = Math.round(ratio < 0.5 ? 220 : 220 - (ratio - 0.5) * 2 * (220 - 40));
+    var g = Math.round(ratio < 0.5 ? ratio * 2 * 180 : 180);
+    var color = 'rgba(' + r + ',' + g + ',30,0.92)';
 
     // Barra
     if (barH > 0) {
