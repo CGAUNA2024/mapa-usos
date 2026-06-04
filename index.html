@@ -70,17 +70,8 @@ body { font-family: 'Segoe UI', sans-serif; background: #1a1a2e; color: #eee; wi
   padding: 10px 12px; z-index: 1000;
   width: 320px;
 }
-#panel-horas h4 { color: #e94560; font-size: 11px; margin-bottom: 8px; }
-#chart-horas { display: flex; align-items: flex-end; gap: 2px; height: 90px; }
-.bar-wrap { display: flex; flex-direction: column; align-items: center; flex: 1; }
-.bar {
-  width: 100%; background: rgba(30,144,255,0.75);
-  border-radius: 2px 2px 0 0; min-height: 2px;
-  transition: height 0.3s;
-  cursor: pointer;
-}
-.bar:hover { background: #e94560; }
-.bar-lbl { font-size: 8px; color: #888; margin-top: 2px; }
+#panel-horas h4 { color: #e94560; font-size: 11px; margin-bottom: 6px; }
+#chart-horas { display: block; width: 100%; }
 #tooltip-hora {
   position: absolute; background: rgba(15,52,96,0.97);
   border: 1px solid #e94560; border-radius: 5px;
@@ -161,7 +152,7 @@ body { font-family: 'Segoe UI', sans-serif; background: #1a1a2e; color: #eee; wi
 <!-- Gráfico usos por hora -->
 <div id="panel-horas">
   <h4>⏱ Usos por hora</h4>
-  <div id="chart-horas"></div>
+  <svg id="chart-horas" width="296" height="100" style="display:block;overflow:visible;"></svg>
 </div>
 <div id="tooltip-hora"></div>
 
@@ -210,47 +201,83 @@ function mkIcon(usos) {
   });
 }
 
-// ── gráfico de barras por hora ─────────────────────────────
+// ── gráfico SVG por hora ───────────────────────────────────
 function renderChartHoras(usosPorHora) {
-  var chart = document.getElementById('chart-horas');
+  var svg = document.getElementById('chart-horas');
   var tooltip = document.getElementById('tooltip-hora');
-  chart.innerHTML = '';
+  svg.innerHTML = '';
+
+  var W = 296, H = 80, LBL = 14;  // ancho total, alto barras, alto etiquetas
+  var n = 24;
+  var gap = 2;
+  var barW = Math.floor((W - gap * (n - 1)) / n);
+
   var vals = [];
-  for (var x = 0; x < 24; x++) vals.push(usosPorHora[x] || 0);
-  // Escala raíz cuadrada: resalta diferencias sin aplanar los picos
+  for (var x = 0; x < n; x++) vals.push(usosPorHora[x] || 0);
+
+  // Escala raíz cuadrada para resaltar diferencias
   var sqrtVals = vals.map(function(v){ return Math.sqrt(v); });
   var maxSqrt = Math.max.apply(null, sqrtVals.concat([1]));
-  for (var h = 0; h < 24; h++) {
+
+  for (var h = 0; h < n; h++) {
     var val = vals[h];
-    var pct = Math.round(sqrtVals[h] / maxSqrt * 96);
-    var wrap = document.createElement('div');
-    wrap.className = 'bar-wrap';
-    var bar = document.createElement('div');
-    bar.className = 'bar';
-    // Color por intensidad: azul → naranja → rojo según % del máximo real
-    var ratio = maxSqrt > 0 ? sqrtVals[h] / maxSqrt : 0;
-    bar.style.background = ratio > 0.75 ? 'rgba(220,50,50,0.85)'
-                         : ratio > 0.4  ? 'rgba(255,165,0,0.85)'
-                                        : 'rgba(30,144,255,0.75)';
-    bar.style.height = Math.max(pct, val > 0 ? 4 : 0) + '%';
-    bar.title = h + ':00 — ' + val.toLocaleString() + ' usos';
-    // tooltip al hover
-    (function(hora, usos) {
-      bar.addEventListener('mousemove', function(e) {
-        tooltip.style.display = 'block';
-        tooltip.style.left = (e.pageX + 10) + 'px';
-        tooltip.style.top  = (e.pageY - 30) + 'px';
-        tooltip.textContent = hora + ':00 hs — ' + usos.toLocaleString() + ' usos';
-      });
-      bar.addEventListener('mouseleave', function() { tooltip.style.display = 'none'; });
-    })(h, val);
-    var lbl = document.createElement('div');
-    lbl.className = 'bar-lbl';
-    lbl.textContent = (h % 3 === 0) ? h : '';
-    wrap.appendChild(bar);
-    wrap.appendChild(lbl);
-    chart.appendChild(wrap);
+    var ratio = sqrtVals[h] / maxSqrt;
+    var barH = val > 0 ? Math.max(Math.round(ratio * H), 3) : 0;
+    var x = h * (barW + gap);
+    var y = H - barH;
+
+    // Color: azul → naranja → rojo
+    var color = ratio > 0.75 ? 'rgba(220,50,50,0.9)'
+              : ratio > 0.4  ? 'rgba(255,165,0,0.9)'
+                             : 'rgba(30,144,255,0.85)';
+
+    // Barra
+    if (barH > 0) {
+      var rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      rect.setAttribute('x', x);
+      rect.setAttribute('y', y);
+      rect.setAttribute('width', barW);
+      rect.setAttribute('height', barH);
+      rect.setAttribute('fill', color);
+      rect.setAttribute('rx', '2');
+      rect.style.cursor = 'pointer';
+
+      (function(hora, usos, rx) {
+        rect.addEventListener('mousemove', function(e) {
+          tooltip.style.display = 'block';
+          tooltip.style.left = (e.pageX + 12) + 'px';
+          tooltip.style.top  = (e.pageY - 36) + 'px';
+          tooltip.textContent = hora + ':00 hs — ' + usos.toLocaleString() + ' usos';
+        });
+        rect.addEventListener('mouseleave', function() { tooltip.style.display = 'none'; });
+      })(h, val, x);
+
+      svg.appendChild(rect);
+    }
+
+    // Etiqueta cada 3 horas
+    if (h % 3 === 0) {
+      var txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      txt.setAttribute('x', x + barW / 2);
+      txt.setAttribute('y', H + LBL);
+      txt.setAttribute('text-anchor', 'middle');
+      txt.setAttribute('font-size', '8');
+      txt.setAttribute('fill', '#888');
+      txt.setAttribute('font-family', 'Segoe UI, sans-serif');
+      txt.textContent = h;
+      svg.appendChild(txt);
+    }
   }
+
+  // Línea base
+  var line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  line.setAttribute('x1', 0); line.setAttribute('y1', H);
+  line.setAttribute('x2', W); line.setAttribute('y2', H);
+  line.setAttribute('stroke', '#444'); line.setAttribute('stroke-width', '1');
+  svg.appendChild(line);
+
+  svg.setAttribute('viewBox', '0 0 ' + W + ' ' + (H + LBL + 2));
+  svg.setAttribute('height', H + LBL + 2);
 }
 
 // ── filtrar y dibujar ──────────────────────────────────────
