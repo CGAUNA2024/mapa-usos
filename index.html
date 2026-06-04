@@ -32,6 +32,7 @@ body { font-family: 'Segoe UI', sans-serif; background: #1a1a2e; color: #eee; wi
   border: 1px solid #e94560; border-radius: 4px;
   padding: 4px 7px; font-size: 12px; min-width: 105px;
 }
+.fg select.narrow, .fg input.narrow { min-width: 72px; }
 #btnFiltrar {
   background: #e94560; color: white; border: none;
   border-radius: 6px; padding: 6px 14px;
@@ -49,16 +50,46 @@ body { font-family: 'Segoe UI', sans-serif; background: #1a1a2e; color: #eee; wi
 #info-bar b { color: #fff; }
 #map { flex: 1; }
 
+/* ── Leyenda burbujas ── */
 #legend {
   position: absolute; bottom: 28px; right: 10px;
   background: rgba(22,33,62,0.93);
   border: 1px solid #444; border-radius: 8px;
   padding: 8px 12px; z-index: 1000; font-size: 11px;
+  max-width: 170px;
 }
 #legend h4 { color: #e94560; margin-bottom: 5px; font-size: 11px; }
 .li { display: flex; align-items: center; gap: 7px; margin: 3px 0; }
 .ld { width: 16px; height: 16px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.5); flex-shrink: 0; }
 
+/* ── Panel gráfico por hora ── */
+#panel-horas {
+  position: absolute; bottom: 28px; left: 10px;
+  background: rgba(22,33,62,0.95);
+  border: 1px solid #444; border-radius: 8px;
+  padding: 10px 12px; z-index: 1000;
+  width: 320px;
+}
+#panel-horas h4 { color: #e94560; font-size: 11px; margin-bottom: 8px; }
+#chart-horas { display: flex; align-items: flex-end; gap: 2px; height: 70px; }
+.bar-wrap { display: flex; flex-direction: column; align-items: center; flex: 1; }
+.bar {
+  width: 100%; background: rgba(30,144,255,0.75);
+  border-radius: 2px 2px 0 0; min-height: 2px;
+  transition: height 0.3s;
+  cursor: pointer;
+}
+.bar:hover { background: #e94560; }
+.bar-lbl { font-size: 8px; color: #888; margin-top: 2px; }
+#tooltip-hora {
+  position: absolute; background: rgba(15,52,96,0.97);
+  border: 1px solid #e94560; border-radius: 5px;
+  padding: 5px 9px; font-size: 11px; color: #fff;
+  pointer-events: none; display: none; z-index: 2000;
+  white-space: nowrap;
+}
+
+/* ── Loading ── */
 #loading {
   position: fixed; top: 0; left: 0; right: 0; bottom: 0;
   background: rgba(22,33,62,0.97);
@@ -95,6 +126,18 @@ body { font-family: 'Segoe UI', sans-serif; background: #1a1a2e; color: #eee; wi
     <input type="date" id="fechaHasta"/>
   </div>
   <div class="fg">
+    <label>Hora desde</label>
+    <select id="horaDesde" class="narrow">
+      <option value="">— —</option>
+    </select>
+  </div>
+  <div class="fg">
+    <label>Hora hasta</label>
+    <select id="horaHasta" class="narrow">
+      <option value="">— —</option>
+    </select>
+  </div>
+  <div class="fg">
     <label>Sentido</label>
     <select id="selSentido">
       <option value="">— Ambos —</option>
@@ -110,10 +153,19 @@ body { font-family: 'Segoe UI', sans-serif; background: #1a1a2e; color: #eee; wi
   <div>Total usos: <b id="lblUsos">0</b></div>
   <div>Línea: <b id="lblLinea">todas</b></div>
   <div>Sentido: <b id="lblSentido">ambos</b></div>
+  <div>Hora: <b id="lblHora">todas</b></div>
 </div>
 
 <div id="map"></div>
 
+<!-- Gráfico usos por hora -->
+<div id="panel-horas">
+  <h4>⏱ Usos por hora</h4>
+  <div id="chart-horas"></div>
+</div>
+<div id="tooltip-hora"></div>
+
+<!-- Leyenda burbujas -->
 <div id="legend">
   <h4>Usos por burbuja</h4>
   <div class="li"><div class="ld" style="background:rgba(30,144,255,0.85)"></div> 1 – 99</div>
@@ -148,7 +200,7 @@ function getSize(u) {
 }
 function fmt(n) { return n >= 1000 ? (n/1000).toFixed(1)+'k' : ''+n; }
 
-function mkIcon(usos, type) {
+function mkIcon(usos) {
   var c = getColor(usos), s = getSize(usos), l = fmt(usos);
   var fs = s < 22 ? 9 : s < 30 ? 10 : 11;
   return L.divIcon({
@@ -158,41 +210,92 @@ function mkIcon(usos, type) {
   });
 }
 
+// ── gráfico de barras por hora ─────────────────────────────
+function renderChartHoras(usosPorHora) {
+  var chart = document.getElementById('chart-horas');
+  var tooltip = document.getElementById('tooltip-hora');
+  chart.innerHTML = '';
+  var maxVal = Math.max.apply(null, Object.values(usosPorHora).concat([1]));
+  for (var h = 0; h < 24; h++) {
+    var val = usosPorHora[h] || 0;
+    var pct = Math.round(val / maxVal * 100);
+    var wrap = document.createElement('div');
+    wrap.className = 'bar-wrap';
+    var bar = document.createElement('div');
+    bar.className = 'bar';
+    bar.style.height = Math.max(pct, val > 0 ? 3 : 0) + '%';
+    bar.title = h + ':00 — ' + val.toLocaleString() + ' usos';
+    // tooltip al hover
+    (function(hora, usos) {
+      bar.addEventListener('mousemove', function(e) {
+        tooltip.style.display = 'block';
+        tooltip.style.left = (e.pageX + 10) + 'px';
+        tooltip.style.top  = (e.pageY - 30) + 'px';
+        tooltip.textContent = hora + ':00 hs — ' + usos.toLocaleString() + ' usos';
+      });
+      bar.addEventListener('mouseleave', function() { tooltip.style.display = 'none'; });
+    })(h, val);
+    var lbl = document.createElement('div');
+    lbl.className = 'bar-lbl';
+    lbl.textContent = (h % 3 === 0) ? h : '';
+    wrap.appendChild(bar);
+    wrap.appendChild(lbl);
+    chart.appendChild(wrap);
+  }
+}
+
 // ── filtrar y dibujar ──────────────────────────────────────
 function applyFilters() {
-  var linea   = document.getElementById('selLinea').value;
-  var desde   = document.getElementById('fechaDesde').value;
-  var hasta   = document.getElementById('fechaHasta').value;
-  var sentido = document.getElementById('selSentido').value;
+  var linea    = document.getElementById('selLinea').value;
+  var desde    = document.getElementById('fechaDesde').value;
+  var hasta    = document.getElementById('fechaHasta').value;
+  var sentido  = document.getElementById('selSentido').value;
+  var horaDesde = document.getElementById('horaDesde').value;
+  var horaHasta = document.getElementById('horaHasta').value;
+  var hD = horaDesde !== '' ? parseInt(horaDesde) : -1;
+  var hH = horaHasta !== '' ? parseInt(horaHasta) : 25;
 
   var zonaMap = {};
+  var usosPorHora = {};
+
   for (var i = 0; i < RAW_DATA.length; i++) {
     var d = RAW_DATA[i];
     if (linea   && d.l !== linea)   continue;
     if (sentido && d.s !== sentido) continue;
     if (desde   && d.f < desde)     continue;
     if (hasta   && d.f > hasta)     continue;
+    var h = (d.h !== undefined && d.h >= 0) ? d.h : -1;
+    if (hD >= 0 && h < hD)  continue;
+    if (hH < 24 && h > hH)  continue;
+
+    // acumular por zona
     var k = d.lat+'|'+d.lon+'|'+d.l+'|'+d.s;
     if (!zonaMap[k]) zonaMap[k] = { lat:d.lat, lon:d.lon, linea:d.l, sentido:d.s, usos:0, fechas:[] };
     zonaMap[k].usos += d.u;
     zonaMap[k].fechas.push(d.f);
+
+    // acumular por hora
+    if (h >= 0) usosPorHora[h] = (usosPorHora[h] || 0) + d.u;
   }
 
   var zonas = Object.values(zonaMap);
   var totalUsos = zonas.reduce(function(a,z){ return a+z.usos; }, 0);
 
-  document.getElementById('lblZonas').textContent = zonas.length.toLocaleString();
-  document.getElementById('lblUsos').textContent  = totalUsos.toLocaleString();
-  document.getElementById('lblLinea').textContent = linea || 'todas';
+  document.getElementById('lblZonas').textContent  = zonas.length.toLocaleString();
+  document.getElementById('lblUsos').textContent   = totalUsos.toLocaleString();
+  document.getElementById('lblLinea').textContent  = linea || 'todas';
   document.getElementById('lblSentido').textContent = sentido || 'ambos';
+  var horaLabel = (horaDesde !== '' || horaHasta !== '')
+    ? (horaDesde !== '' ? horaDesde+'h' : '0h') + ' – ' + (horaHasta !== '' ? horaHasta+'h' : '23h')
+    : 'todas';
+  document.getElementById('lblHora').textContent = horaLabel;
 
   if (clusterGroup) map.removeLayer(clusterGroup);
-
   clusterGroup = L.markerClusterGroup({
     maxClusterRadius: 60,
     iconCreateFunction: function(cluster) {
       var total = cluster.getAllChildMarkers().reduce(function(a,m){ return a+(m._usos||0); },0);
-      return mkIcon(total, 'cluster');
+      return mkIcon(total);
     },
     disableClusteringAtZoom: 16,
     showCoverageOnHover: false,
@@ -202,19 +305,20 @@ function applyFilters() {
   for (var j = 0; j < zonas.length; j++) {
     var z = zonas[j];
     var fechasStr = z.fechas.sort().slice(0,3).join(', ') + (z.fechas.length > 3 ? ' (+' + (z.fechas.length-3) + ' más)' : '');
-    var m = L.marker([z.lat, z.lon], { icon: mkIcon(z.usos, 'marker') });
+    var m = L.marker([z.lat, z.lon], { icon: mkIcon(z.usos) });
     m._usos = z.usos;
     m.bindPopup('<b>'+z.linea+'</b><br>📍 '+z.lat+', '+z.lon+'<br>🚌 Usos: <b>'+z.usos.toLocaleString()+'</b><br>↔ '+z.sentido+'<br>📅 '+fechasStr);
     clusterGroup.addLayer(m);
   }
-
   map.addLayer(clusterGroup);
   if (zonas.length > 0 && linea) {
     try { map.fitBounds(clusterGroup.getBounds(), { padding: [40,40] }); } catch(e) {}
   }
+
+  renderChartHoras(usosPorHora);
 }
 
-// ── cargar datos JSON externo (soporta archivo único o múltiples partes) ──
+// ── cargar datos JSON externo ──────────────────────────────
 function setProgress(pct, txt) {
   document.getElementById('progress-bar').style.width = pct + '%';
   document.getElementById('prog-text').textContent = txt;
@@ -247,12 +351,11 @@ function finalizarCarga(data) {
 
 function loadData() {
   setProgress(5, 'Verificando archivos...');
-  // Primero intentar con índice de partes (datos_01.json, datos_02.json, ...)
   fetchJSON('datos_indice.json')
     .then(function(indice) {
       var partes = indice.partes || [];
       if (!partes.length) throw new Error('vacío');
-      var total = partes.length, cargadas = 0;
+      var total = partes.length;
       var secuencia = Promise.resolve([]);
       partes.forEach(function(nombre, i) {
         secuencia = secuencia.then(function(acum) {
@@ -260,17 +363,13 @@ function loadData() {
             if (e.lengthComputable)
               setProgress(10 + Math.round((i + e.loaded/e.total) / total * 82),
                 'Descargando parte ' + (i+1) + '/' + total + ' (' + Math.round(e.loaded/1024) + ' KB)');
-          }).then(function(parte) {
-            cargadas++;
-            return acum.concat(parte);
-          });
+          }).then(function(parte) { return acum.concat(parte); });
         });
       });
       return secuencia;
     })
     .then(function(data) { finalizarCarga(data); })
     .catch(function() {
-      // Fallback: archivo único datos.json
       setProgress(10, 'Conectando con el servidor...');
       fetchJSON('datos.json', function(e) {
         if (e.lengthComputable)
@@ -287,12 +386,25 @@ function loadData() {
 function initFilters() {
   var lines = [...new Set(RAW_DATA.map(function(d){ return d.l; }))].sort();
   var dates = [...new Set(RAW_DATA.map(function(d){ return d.f; }))].sort();
+  var horas = [...new Set(RAW_DATA.map(function(d){ return d.h; }).filter(function(h){ return h >= 0; }))].sort(function(a,b){return a-b;});
+
   var sel = document.getElementById('selLinea');
   lines.forEach(function(l){ var o=document.createElement('option'); o.value=l; o.textContent=l; sel.appendChild(o); });
+
   if (dates.length > 0) {
     document.getElementById('fechaDesde').value = dates[0];
     document.getElementById('fechaHasta').value  = dates[dates.length-1];
   }
+
+  // Poblar selectores de hora
+  var selHD = document.getElementById('horaDesde');
+  var selHH = document.getElementById('horaHasta');
+  horas.forEach(function(h) {
+    var lbl = h + ':00';
+    var o1 = document.createElement('option'); o1.value = h; o1.textContent = lbl; selHD.appendChild(o1);
+    var o2 = document.createElement('option'); o2.value = h; o2.textContent = lbl; selHH.appendChild(o2);
+  });
+
   document.getElementById('btnFiltrar').addEventListener('click', applyFilters);
 }
 
