@@ -71,7 +71,7 @@ body { font-family: 'Segoe UI', sans-serif; background: #1a1a2e; color: #eee; wi
   width: 320px;
 }
 #panel-horas h4 { color: #e94560; font-size: 11px; margin-bottom: 8px; }
-#chart-horas { display: flex; align-items: flex-end; gap: 2px; height: 70px; }
+#chart-horas { display: flex; align-items: flex-end; gap: 2px; height: 90px; }
 .bar-wrap { display: flex; flex-direction: column; align-items: center; flex: 1; }
 .bar {
   width: 100%; background: rgba(30,144,255,0.75);
@@ -215,15 +215,24 @@ function renderChartHoras(usosPorHora) {
   var chart = document.getElementById('chart-horas');
   var tooltip = document.getElementById('tooltip-hora');
   chart.innerHTML = '';
-  var maxVal = Math.max.apply(null, Object.values(usosPorHora).concat([1]));
+  var vals = [];
+  for (var x = 0; x < 24; x++) vals.push(usosPorHora[x] || 0);
+  // Escala raíz cuadrada: resalta diferencias sin aplanar los picos
+  var sqrtVals = vals.map(function(v){ return Math.sqrt(v); });
+  var maxSqrt = Math.max.apply(null, sqrtVals.concat([1]));
   for (var h = 0; h < 24; h++) {
-    var val = usosPorHora[h] || 0;
-    var pct = Math.round(val / maxVal * 100);
+    var val = vals[h];
+    var pct = Math.round(sqrtVals[h] / maxSqrt * 96);
     var wrap = document.createElement('div');
     wrap.className = 'bar-wrap';
     var bar = document.createElement('div');
     bar.className = 'bar';
-    bar.style.height = Math.max(pct, val > 0 ? 3 : 0) + '%';
+    // Color por intensidad: azul → naranja → rojo según % del máximo real
+    var ratio = maxSqrt > 0 ? sqrtVals[h] / maxSqrt : 0;
+    bar.style.background = ratio > 0.75 ? 'rgba(220,50,50,0.85)'
+                         : ratio > 0.4  ? 'rgba(255,165,0,0.85)'
+                                        : 'rgba(30,144,255,0.75)';
+    bar.style.height = Math.max(pct, val > 0 ? 4 : 0) + '%';
     bar.title = h + ':00 — ' + val.toLocaleString() + ' usos';
     // tooltip al hover
     (function(hora, usos) {
