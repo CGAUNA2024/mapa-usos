@@ -214,42 +214,74 @@ function applyFilters() {
   }
 }
 
-// ── cargar datos JSON externo ──────────────────────────────
+// ── cargar datos JSON externo (soporta archivo único o múltiples partes) ──
 function setProgress(pct, txt) {
   document.getElementById('progress-bar').style.width = pct + '%';
   document.getElementById('prog-text').textContent = txt;
 }
 
+function fetchJSON(url, onProgress) {
+  return new Promise(function(resolve, reject) {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', url, true);
+    if (onProgress) xhr.onprogress = onProgress;
+    xhr.onload = function() {
+      if (xhr.status === 200) {
+        try { resolve(JSON.parse(xhr.responseText)); }
+        catch(e) { reject('Error JSON: ' + e.message); }
+      } else { reject('HTTP ' + xhr.status); }
+    };
+    xhr.onerror = function() { reject('Error de red'); };
+    xhr.send();
+  });
+}
+
+function finalizarCarga(data) {
+  RAW_DATA = data;
+  setProgress(95, 'Procesando...');
+  initFilters();
+  applyFilters();
+  setProgress(100, 'Listo — ' + RAW_DATA.length.toLocaleString() + ' registros');
+  setTimeout(function(){ document.getElementById('loading').style.display='none'; }, 400);
+}
+
 function loadData() {
-  setProgress(10, 'Conectando con el servidor...');
-  var xhr = new XMLHttpRequest();
-  xhr.open('GET', 'datos.json', true);
-  xhr.onprogress = function(e) {
-    if (e.lengthComputable) {
-      var p = Math.round(e.loaded / e.total * 80);
-      setProgress(10 + p, 'Descargando datos: ' + Math.round(e.loaded/1024) + ' KB');
-    }
-  };
-  xhr.onload = function() {
-    if (xhr.status === 200) {
-      setProgress(95, 'Procesando...');
-      try {
-        RAW_DATA = JSON.parse(xhr.responseText);
-        initFilters();
-        applyFilters();
-        setProgress(100, 'Listo');
-        setTimeout(function(){ document.getElementById('loading').style.display='none'; }, 400);
-      } catch(e) {
-        document.getElementById('prog-text').textContent = 'Error al procesar datos: ' + e.message;
-      }
-    } else {
-      document.getElementById('prog-text').textContent = 'Error al cargar datos (HTTP ' + xhr.status + ')';
-    }
-  };
-  xhr.onerror = function() {
-    document.getElementById('prog-text').textContent = 'Error de red. Verificá la conexión.';
-  };
-  xhr.send();
+  setProgress(5, 'Verificando archivos...');
+  // Primero intentar con índice de partes (datos_01.json, datos_02.json, ...)
+  fetchJSON('datos_indice.json')
+    .then(function(indice) {
+      var partes = indice.partes || [];
+      if (!partes.length) throw new Error('vacío');
+      var total = partes.length, cargadas = 0;
+      var secuencia = Promise.resolve([]);
+      partes.forEach(function(nombre, i) {
+        secuencia = secuencia.then(function(acum) {
+          return fetchJSON(nombre, function(e) {
+            if (e.lengthComputable)
+              setProgress(10 + Math.round((i + e.loaded/e.total) / total * 82),
+                'Descargando parte ' + (i+1) + '/' + total + ' (' + Math.round(e.loaded/1024) + ' KB)');
+          }).then(function(parte) {
+            cargadas++;
+            return acum.concat(parte);
+          });
+        });
+      });
+      return secuencia;
+    })
+    .then(function(data) { finalizarCarga(data); })
+    .catch(function() {
+      // Fallback: archivo único datos.json
+      setProgress(10, 'Conectando con el servidor...');
+      fetchJSON('datos.json', function(e) {
+        if (e.lengthComputable)
+          setProgress(10 + Math.round(e.loaded/e.total*82),
+            'Descargando datos: ' + Math.round(e.loaded/1024) + ' KB');
+      })
+      .then(function(data) { finalizarCarga(data); })
+      .catch(function(err) {
+        document.getElementById('prog-text').textContent = 'Error al cargar datos: ' + err;
+      });
+    });
 }
 
 function initFilters() {
