@@ -375,7 +375,7 @@ function renderChartDias(usosPorDia) {
       vtxt.setAttribute('font-size', '7');
       vtxt.setAttribute('fill', '#ccc');
       vtxt.setAttribute('font-family', 'Segoe UI, sans-serif');
-      vtxt.textContent = val >= 1000 ? (val/1000).toFixed(1)+'k' : val;
+      vtxt.textContent = val >= 100000 ? (val/1000).toFixed(1)+'k' : val.toLocaleString();
       svg.appendChild(vtxt);
     }
   }
