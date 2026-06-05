@@ -62,6 +62,17 @@ body { font-family: 'Segoe UI', sans-serif; background: #1a1a2e; color: #eee; wi
 .li { display: flex; align-items: center; gap: 7px; margin: 3px 0; }
 .ld { width: 16px; height: 16px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.5); flex-shrink: 0; }
 
+/* ── Panel gráfico por día ── */
+#panel-dias {
+  position: absolute; bottom: 175px; left: 10px;
+  background: rgba(22,33,62,0.95);
+  border: 1px solid #444; border-radius: 8px;
+  padding: 10px 12px; z-index: 1000;
+  width: 320px;
+}
+#panel-dias h4 { color: #e94560; font-size: 11px; margin-bottom: 6px; }
+#chart-dias { display: block; width: 100%; }
+
 /* ── Panel gráfico por hora ── */
 #panel-horas {
   position: absolute; bottom: 28px; left: 10px;
@@ -148,6 +159,12 @@ body { font-family: 'Segoe UI', sans-serif; background: #1a1a2e; color: #eee; wi
 </div>
 
 <div id="map"></div>
+
+<!-- Gráfico usos por día (últimos 8 días) -->
+<div id="panel-dias">
+  <h4>📅 Usos por día — últimos 8 días</h4>
+  <svg id="chart-dias" width="296" height="100" style="display:block;overflow:visible;"></svg>
+</div>
 
 <!-- Gráfico usos por hora -->
 <div id="panel-horas">
@@ -280,6 +297,100 @@ function renderChartHoras(usosPorHora) {
   svg.setAttribute('height', H + LBL + 2);
 }
 
+// ── gráfico SVG por día (últimos 8 días) ──────────────────
+function renderChartDias(usosPorDia) {
+  var svg = document.getElementById('chart-dias');
+  var tooltip = document.getElementById('tooltip-hora'); // reutiliza el mismo tooltip
+  svg.innerHTML = '';
+
+  var W = 296, H = 80, LBL = 18;
+  var gap = 4;
+
+  // Obtener los últimos 8 días con datos, ordenados
+  var fechas = Object.keys(usosPorDia).sort().slice(-8);
+  var n = fechas.length;
+  if (n === 0) { svg.setAttribute('height', 0); return; }
+
+  var barW = Math.floor((W - gap * (n - 1)) / n);
+  var vals = fechas.map(function(f){ return usosPorDia[f]; });
+
+  var sqrtVals = vals.map(function(v){ return Math.sqrt(v); });
+  var maxSqrt = Math.max.apply(null, sqrtVals.concat([1]));
+
+  for (var i = 0; i < n; i++) {
+    var val = vals[i];
+    var ratio = sqrtVals[i] / maxSqrt;
+    var barH = val > 0 ? Math.max(Math.round(ratio * H), 4) : 0;
+    var x = i * (barW + gap);
+    var y = H - barH;
+
+    // Degradado verde → rojo igual que horas
+    var r = Math.round(ratio < 0.5 ? 220 : 220 - (ratio - 0.5) * 2 * (220 - 40));
+    var g = Math.round(ratio < 0.5 ? ratio * 2 * 180 : 180);
+    var color = 'rgba(' + r + ',' + g + ',30,0.92)';
+
+    if (barH > 0) {
+      var rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      rect.setAttribute('x', x);
+      rect.setAttribute('y', y);
+      rect.setAttribute('width', barW);
+      rect.setAttribute('height', barH);
+      rect.setAttribute('fill', color);
+      rect.setAttribute('rx', '2');
+      rect.style.cursor = 'pointer';
+
+      (function(fecha, usos) {
+        rect.addEventListener('mousemove', function(e) {
+          tooltip.style.display = 'block';
+          tooltip.style.left = (e.pageX + 12) + 'px';
+          tooltip.style.top  = (e.pageY - 36) + 'px';
+          // Formatear fecha dd/mm
+          var partes = fecha.split('-');
+          tooltip.textContent = partes[2] + '/' + partes[1] + ' — ' + usos.toLocaleString() + ' usos';
+        });
+        rect.addEventListener('mouseleave', function() { tooltip.style.display = 'none'; });
+      })(fechas[i], val);
+
+      svg.appendChild(rect);
+    }
+
+    // Etiqueta dd/mm debajo de cada barra
+    var partes = fechas[i].split('-');
+    var txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    txt.setAttribute('x', x + barW / 2);
+    txt.setAttribute('y', H + LBL - 2);
+    txt.setAttribute('text-anchor', 'middle');
+    txt.setAttribute('font-size', '8');
+    txt.setAttribute('fill', '#888');
+    txt.setAttribute('font-family', 'Segoe UI, sans-serif');
+    txt.textContent = partes[2] + '/' + partes[1];
+    svg.appendChild(txt);
+
+    // Valor encima de la barra
+    if (val > 0) {
+      var vtxt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      vtxt.setAttribute('x', x + barW / 2);
+      vtxt.setAttribute('y', Math.max(y - 2, 8));
+      vtxt.setAttribute('text-anchor', 'middle');
+      vtxt.setAttribute('font-size', '7');
+      vtxt.setAttribute('fill', '#ccc');
+      vtxt.setAttribute('font-family', 'Segoe UI, sans-serif');
+      vtxt.textContent = val >= 1000 ? (val/1000).toFixed(1)+'k' : val;
+      svg.appendChild(vtxt);
+    }
+  }
+
+  // Línea base
+  var line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  line.setAttribute('x1', 0); line.setAttribute('y1', H);
+  line.setAttribute('x2', W); line.setAttribute('y2', H);
+  line.setAttribute('stroke', '#444'); line.setAttribute('stroke-width', '1');
+  svg.appendChild(line);
+
+  svg.setAttribute('viewBox', '0 0 ' + W + ' ' + (H + LBL + 2));
+  svg.setAttribute('height', H + LBL + 2);
+}
+
 // ── filtrar y dibujar ──────────────────────────────────────
 function applyFilters() {
   var linea    = document.getElementById('selLinea').value;
@@ -293,6 +404,17 @@ function applyFilters() {
 
   var zonaMap = {};
   var usosPorHora = {};
+  var usosPorDia  = {};
+
+  // Calcular rango de últimos 8 días a partir del máximo disponible en los datos
+  var todasFechas = RAW_DATA.map(function(d){ return d.f; }).filter(Boolean).sort();
+  var fechaMax = todasFechas.length ? todasFechas[todasFechas.length-1] : '';
+  var fecha8 = '';
+  if (fechaMax) {
+    var dm = new Date(fechaMax + 'T00:00:00');
+    dm.setDate(dm.getDate() - 7);
+    fecha8 = dm.toISOString().slice(0,10);
+  }
 
   for (var i = 0; i < RAW_DATA.length; i++) {
     var d = RAW_DATA[i];
@@ -312,6 +434,9 @@ function applyFilters() {
 
     // acumular por hora
     if (h >= 0) usosPorHora[h] = (usosPorHora[h] || 0) + d.u;
+
+    // acumular por día (solo últimos 8 días del dataset)
+    if (d.f && d.f >= fecha8) usosPorDia[d.f] = (usosPorDia[d.f] || 0) + d.u;
   }
 
   var zonas = Object.values(zonaMap);
@@ -352,6 +477,7 @@ function applyFilters() {
   }
 
   renderChartHoras(usosPorHora);
+  renderChartDias(usosPorDia);
 }
 
 // ── cargar datos JSON externo ──────────────────────────────
