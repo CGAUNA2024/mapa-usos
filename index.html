@@ -406,7 +406,8 @@ function applyFilters() {
   var usosPorHora = {};
   var usosPorDia  = {};
 
-  // Calcular rango de últimos 8 días a partir del máximo disponible en los datos
+  // ── Gráfico de días: recorre RAW_DATA completo, SIN filtros de fecha ──
+  // Solo respeta filtro de línea y sentido para que sea coherente con el mapa
   var todasFechas = RAW_DATA.map(function(d){ return d.f; }).filter(Boolean).sort();
   var fechaMax = todasFechas.length ? todasFechas[todasFechas.length-1] : '';
   var fecha8 = '';
@@ -415,7 +416,14 @@ function applyFilters() {
     dm.setDate(dm.getDate() - 7);
     fecha8 = dm.toISOString().slice(0,10);
   }
+  for (var j = 0; j < RAW_DATA.length; j++) {
+    var dd = RAW_DATA[j];
+    if (linea   && dd.l !== linea)   continue;
+    if (sentido && dd.s !== sentido) continue;
+    if (dd.f && dd.f >= fecha8) usosPorDia[dd.f] = (usosPorDia[dd.f] || 0) + dd.u;
+  }
 
+  // ── Mapa y gráfico de horas: respetan todos los filtros ──
   for (var i = 0; i < RAW_DATA.length; i++) {
     var d = RAW_DATA[i];
     if (linea   && d.l !== linea)   continue;
@@ -434,9 +442,6 @@ function applyFilters() {
 
     // acumular por hora
     if (h >= 0) usosPorHora[h] = (usosPorHora[h] || 0) + d.u;
-
-    // acumular por día (solo últimos 8 días del dataset)
-    if (d.f && d.f >= fecha8) usosPorDia[d.f] = (usosPorDia[d.f] || 0) + d.u;
   }
 
   var zonas = Object.values(zonaMap);
