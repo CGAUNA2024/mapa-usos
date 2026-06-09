@@ -90,6 +90,14 @@ body { font-family: 'Segoe UI', sans-serif; background: #1a1a2e; color: #eee; wi
   pointer-events: none; display: none; z-index: 2000;
   white-space: nowrap;
 }
+/* ── Toggle recorridos ── */
+#btn-recorridos {
+  background: #0f3460; color: #fff; border: 1px solid #e94560;
+  border-radius: 6px; padding: 6px 14px;
+  font-size: 12px; cursor: pointer; margin-bottom: 1px;
+}
+#btn-recorridos.activo { background: #e94560; }
+#btn-recorridos:hover { background: #c73652; }
 
 /* ── Loading ── */
 #loading {
@@ -148,6 +156,7 @@ body { font-family: 'Segoe UI', sans-serif; background: #1a1a2e; color: #eee; wi
     </select>
   </div>
   <button id="btnFiltrar">▶ Aplicar</button>
+  <button id="btn-recorridos" title="Mostrar/ocultar recorridos oficiales">🛣 Recorridos</button>
 </div>
 
 <div id="info-bar">
@@ -575,10 +584,89 @@ function initFilters() {
   document.getElementById('btnFiltrar').addEventListener('click', applyFilters);
 }
 
+// ── recorridos oficiales ───────────────────────────────────
+var RECORRIDOS_DATA = null;
+var recorridoLayers = [];
+var recorridosVisible = false;
+
+// Colores por línea
+var COLORES_LINEA = {
+  '102A':'#e74c3c','102B':'#e67e22','102C':'#f1c40f',
+  '103A':'#2ecc71','103B':'#1abc9c','103C':'#27ae60',
+  '104A':'#3498db','104B':'#2980b9','104C':'#1a6ea8','104D':'#0d5a9c',
+  '105A':'#9b59b6','105B':'#8e44ad','105C':'#7d3c98','105ACOL':'#c39bd3',
+  '106A':'#e91e63','106B':'#f06292','106C':'#f48fb1',
+  '108A':'#ff9800','108C':'#fb8c00',
+  '109A':'#00bcd4','109B':'#0097a7',
+  'RIACHUELO':'#4caf50'
+};
+
+function getColorLinea(linea) {
+  return COLORES_LINEA[linea] || '#aaaaaa';
+}
+
+function dibujarRecorridos() {
+  // Limpiar trazos anteriores
+  recorridoLayers.forEach(function(l){ map.removeLayer(l); });
+  recorridoLayers = [];
+  if (!RECORRIDOS_DATA || !recorridosVisible) return;
+
+  var linea   = document.getElementById('selLinea').value;
+  var sentido = document.getElementById('selSentido').value;
+
+  RECORRIDOS_DATA.forEach(function(tramo) {
+    if (linea   && tramo.l !== linea)   return;
+    if (sentido && tramo.s !== sentido && tramo.s !== 'Sin sentido') return;
+
+    var latlngs = tramo.c.map(function(p){ return [p[1], p[0]]; });
+    var color = getColorLinea(tramo.l);
+    var dash = tramo.s === 'Vuelta' ? '8,5' : null;
+
+    var poly = L.polyline(latlngs, {
+      color: color,
+      weight: 3,
+      opacity: 0.85,
+      dashArray: dash,
+      smoothFactor: 1
+    });
+    poly.bindTooltip('<b>' + tramo.l + '</b> — ' + tramo.s, {sticky: true});
+    poly.addTo(map);
+    recorridoLayers.push(poly);
+  });
+}
+
+function cargarRecorridos(callback) {
+  if (RECORRIDOS_DATA) { callback(); return; }
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', 'recorridos.json', true);
+  xhr.onload = function() {
+    if (xhr.status === 200) {
+      RECORRIDOS_DATA = JSON.parse(xhr.responseText);
+      callback();
+    }
+  };
+  xhr.send();
+}
+
 // ── inicio ─────────────────────────────────────────────────
 window.addEventListener('load', function() {
   initMap();
   loadData();
+
+  document.getElementById('btn-recorridos').addEventListener('click', function() {
+    recorridosVisible = !recorridosVisible;
+    this.classList.toggle('activo', recorridosVisible);
+    if (recorridosVisible) {
+      cargarRecorridos(function(){ dibujarRecorridos(); });
+    } else {
+      dibujarRecorridos(); // limpia
+    }
+  });
+
+  // Redibujar recorridos cuando cambia filtro
+  document.getElementById('btnFiltrar').addEventListener('click', function() {
+    if (recorridosVisible) dibujarRecorridos();
+  }, true);
 });
 </script>
 </body>
