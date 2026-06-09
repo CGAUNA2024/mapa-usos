@@ -522,7 +522,11 @@ function finalizarCarga(data) {
   initFilters();
   applyFilters();
   setProgress(100, 'Listo — ' + RAW_DATA.length.toLocaleString() + ' registros');
-  setTimeout(function(){ document.getElementById('loading').style.display='none'; }, 400);
+  setTimeout(function(){
+    document.getElementById('loading').style.display='none';
+    // Cargar recorridos automáticamente al abrir
+    cargarRecorridos(function(){ dibujarRecorridos(); });
+  }, 400);
 }
 
 function loadData() {
@@ -587,7 +591,7 @@ function initFilters() {
 // ── recorridos oficiales ───────────────────────────────────
 var RECORRIDOS_DATA = null;
 var recorridoLayers = [];
-var recorridosVisible = false;
+var recorridosVisible = true;
 
 // Colores por línea
 var COLORES_LINEA = {
@@ -652,6 +656,8 @@ function cargarRecorridos(callback) {
 window.addEventListener('load', function() {
   initMap();
   loadData();
+  // Activar botón recorridos visualmente desde el inicio
+  document.getElementById('btn-recorridos').classList.add('activo');
 
   document.getElementById('btn-recorridos').addEventListener('click', function() {
     recorridosVisible = !recorridosVisible;
