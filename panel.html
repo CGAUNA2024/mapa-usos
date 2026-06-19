@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel Usos SUBE — ERSA Urbano</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; color: #1a1a2e; }
+
+#header {
+  background: linear-gradient(135deg, #16213e, #0f3460);
+  padding: 11px 20px; display: flex; align-items: center; gap: 14px;
+  border-bottom: 3px solid #e94560;
+}
+#header-text h1 { font-size: 15px; color: #e94560; }
+#header-text p  { font-size: 11px; color: #99aabb; margin-top: 2px; }
+#header-right { margin-left: auto; text-align: right; font-size: 11px; color: #99aabb; line-height: 1.6; }
+#header-right b { color: #fff; }
+
+#loading {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; height: 70vh; gap: 14px;
+}
+.spinner { width: 40px; height: 40px; border: 4px solid #ddd; border-top-color: #e94560; border-radius: 50%; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+#loading p { font-size: 13px; color: #555; }
+#prog-bar-wrap { width: 260px; height: 6px; background: #ddd; border-radius: 3px; overflow: hidden; }
+#prog-bar { height: 100%; width: 0%; background: #e94560; transition: width 0.3s; border-radius: 3px; }
+
+#error-box { display: none; text-align: center; padding: 40px; color: #c00; font-size: 14px; }
+#content { display: none; padding: 14px; }
+
+#filtros {
+  background: #fff; border-radius: 10px; padding: 11px 16px;
+  display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end;
+  margin-bottom: 14px; box-shadow: 0 1px 4px rgba(0,0,0,.08);
+}
+.fg { display: flex; flex-direction: column; gap: 3px; }
+.fg label { font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: .5px; }
+.fg select, .fg input { border: 1px solid #ddd; border-radius: 6px; padding: 5px 8px; font-size: 12px; background: #fff; min-width: 108px; color: #1a1a2e; }
+#btnAplicar { background: #e94560; color: #fff; border: none; border-radius: 6px; padding: 7px 16px; font-size: 12px; font-weight: bold; cursor: pointer; }
+#btnAplicar:hover { background: #c73652; }
+#btnMapa { background: #0f3460; color: #fff; border: 1px solid #e94560; border-radius: 6px; padding: 7px 13px; font-size: 12px; cursor: pointer; text-decoration: none; display: inline-block; }
+#btnMapa:hover { background: #16427a; }
+#lblPeriodo { font-size: 11px; color: #888; align-self: center; margin-left: 4px; }
+
+#kpis { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-bottom: 14px; }
+@media (max-width: 900px) { #kpis { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 500px) { #kpis { grid-template-columns: repeat(2, 1fr); } }
+.kpi { background: #fff; border-radius: 10px; padding: 12px 14px; box-shadow: 0 1px 4px rgba(0,0,0,.08); border-left: 4px solid #e94560; }
+.kpi .val { font-size: 22px; font-weight: 700; color: #0f3460; line-height: 1.2; }
+.kpi .lbl { font-size: 10px; color: #888; margin-top: 3px; text-transform: uppercase; letter-spacing: .4px; }
+
+#charts { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+@media (max-width: 650px) { #charts { grid-template-columns: 1fr; } }
+.chart-box { background: #fff; border-radius: 10px; padding: 13px 15px; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+.chart-box h3 { font-size: 11px; color: #e94560; margin-bottom: 10px; text-transform: uppercase; letter-spacing: .5px; }
+.chart-wrap { position: relative; height: 210px; }
+
+#tabla-box { background: #fff; border-radius: 10px; padding: 13px 15px; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+#tabla-box h3 { font-size: 11px; color: #e94560; margin-bottom: 10px; text-transform: uppercase; letter-spacing: .5px; }
+table { width: 100%; border-collapse: collapse; font-size: 12px; }
+th { background: #f5f6f8; padding: 7px 10px; text-align: left; color: #555; font-weight: 600; border-bottom: 2px solid #eee; }
+td { padding: 6px 10px; border-bottom: 1px solid #f0f0f0; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: #fafbfc; }
+.bar-wrap { display: flex; align-items: center; gap: 8px; }
+.mini-bar { height: 9px; border-radius: 3px; background: linear-gradient(90deg, #e94560, #0f3460); min-width: 2px; }
+.pct { font-size: 11px; color: #aaa; min-width: 38px; }
+</style>
+</head>
+<body>
+
+<div id="header">
+  <div id="header-text">
+    <h1>📊 Panel Usos SUBE por Zona</h1>
+    <p>Líneas Urbanas CORRIENTES — ERSA Urbano</p>
+  </div>
+  <div id="header-right">
+    Datos al: <b id="lblFechaMax">—</b><br>
+    Desde: <b id="lblFechaMin">—</b>
+  </div>
+</div>
+
+<div id="loading">
+  <div class="spinner"></div>
+  <p id="lblCargando">Conectando a GitHub...</p>
+  <div id="prog-bar-wrap"><div id="prog-bar"></div></div>
+</div>
+<div id="error-box">❌ No se pudieron cargar los datos.<br><small id="lblError"></small></div>
+
+<div id="content">
+  <div id="filtros">
+    <div class="fg"><label>Línea</label><select id="fLinea"><option value="">— Todas —</option></select></div>
+    <div class="fg"><label>Fecha desde</label><input type="date" id="fDesde"/></div>
+    <div class="fg"><label>Fecha hasta</label><input type="date" id="fHasta"/></div>
+    <div class="fg">
+      <label>Sentido</label>
+      <select id="fSentido">
+        <option value="">— Ambos —</option>
+        <option value="Ida">Ida</option>
+        <option value="Vuelta">Vuelta</option>
+      </select>
+    </div>
+    <button id="btnAplicar">▶ Aplicar</button>
+    <a id="btnMapa" href="https://cgauna2024.github.io/mapa-usos" target="_blank">🗺 Ver Mapa</a>
+    <span id="lblPeriodo"></span>
+  </div>
+
+  <div id="kpis">
+    <div class="kpi"><div class="val" id="kTotalUsos">—</div><div class="lbl">Total usos</div></div>
+    <div class="kpi"><div class="val" id="kUsoHoy">—</div><div class="lbl" id="lblHoy">Usos hoy</div></div>
+    <div class="kpi"><div class="val" id="kLineas">—</div><div class="lbl">Líneas con usos</div></div>
+    <div class="kpi"><div class="val" id="kDias">—</div><div class="lbl">Días con datos</div></div>
+    <div class="kpi"><div class="val" id="kPromDia">—</div><div class="lbl">Prom. usos/día</div></div>
+    <div class="kpi"><div class="val" id="kPicoHora">—</div><div class="lbl">Hora pico</div></div>
+  </div>
+
+  <div id="charts">
+    <div class="chart-box"><h3>Usos por día — últimos 30 días</h3><div class="chart-wrap"><canvas id="chartDias"></canvas></div></div>
+    <div class="chart-box"><h3>Usos por hora del día</h3><div class="chart-wrap"><canvas id="chartHoras"></canvas></div></div>
+  </div>
+
+  <div id="tabla-box">
+    <h3>Usos por línea</h3>
+    <table><thead><tr><th>Línea</th><th>Usos</th><th>Distribución</th></tr></thead><tbody id="tbodyLineas"></tbody></table>
+  </div>
+</div>
+
+<script>
+const BASE = 'https://cgauna2024.github.io/mapa-usos/';
+let chartDias = null, chartHoras = null, DATOS = null;
+
+function fmt(n) {
+  if (n >= 1000000) return (n/1000000).toFixed(2).replace(/\.?0+$/,'') + 'M';
+  if (n >= 1000)    return (n/1000).toFixed(1).replace(/\.0$/,'') + 'k';
+  return n.toLocaleString('es-AR');
+}
+function setProgreso(pct, msg) {
+  document.getElementById('prog-bar').style.width = pct + '%';
+  document.getElementById('lblCargando').textContent = msg;
+}
+
+async function cargarDatos() {
+  setProgreso(5, 'Leyendo índice...');
+  const idx = await fetch(BASE + 'datos_indice.json?t=' + Date.now()).then(r => r.json());
+  const partes = idx.partes || [];
+  let todo = [];
+  for (let i = 0; i < partes.length; i++) {
+    setProgreso(10 + Math.round((i / partes.length) * 85), `Cargando parte ${i+1} de ${partes.length}...`);
+    const chunk = await fetch(BASE + partes[i] + '?t=' + Date.now()).then(r => r.json());
+    todo = todo.concat(chunk);
+  }
+  setProgreso(98, 'Procesando...');
+  return todo;
+}
+
+function agregarDatos(raw) {
+  const porDia = {}, porHora = {}, porLinea = {};
+  for (const r of raw) {
+    porDia[r.f]   = (porDia[r.f]   || 0) + r.u;
+    porLinea[r.l] = (porLinea[r.l] || 0) + r.u;
+    if (r.h >= 0) porHora[r.h] = (porHora[r.h] || 0) + r.u;
+  }
+  const fechas    = Object.keys(porDia).sort();
+  const diasArr   = fechas.map(f => [f, porDia[f]]);
+  const horasArr  = Object.entries(porHora).map(([h,v]) => [+h,v]).sort((a,b)=>a[0]-b[0]);
+  const lineasArr = Object.entries(porLinea).sort((a,b) => b[1]-a[1]);
+  const todasLineas = Object.keys(porLinea).sort();
+  return { diasArr, horasArr, lineasArr, todasLineas, fechas };
+}
+
+function render() {
+  const filtLinea = document.getElementById('fLinea').value;
+  const filtDesde = document.getElementById('fDesde').value;
+  const filtHasta = document.getElementById('fHasta').value;
+  const { diasArr, horasArr, lineasArr } = DATOS;
+
+  const diasFilt      = diasArr.filter(([f]) => (!filtDesde || f >= filtDesde) && (!filtHasta || f <= filtHasta));
+  const totalUsos     = diasFilt.reduce((s,[,v]) => s+v, 0);
+  const nDias         = diasFilt.length || 1;
+  const lineasFilt    = filtLinea ? lineasArr.filter(([l]) => l === filtLinea) : lineasArr;
+  const usosFiltLinea = filtLinea ? (lineasFilt[0]?.[1] || 0) : totalUsos;
+  const picoEntry     = [...horasArr].sort((a,b) => b[1]-a[1])[0];
+  const usosHoy       = diasArr.slice(-1)[0]?.[1] || 0;
+  const fechaHoy      = diasArr.slice(-1)[0]?.[0] || '';
+
+  if (diasFilt.length > 0) {
+    const [,m1,d1] = diasFilt[0][0].split('-');
+    const [y2,m2,d2] = diasFilt.slice(-1)[0][0].split('-');
+    document.getElementById('lblPeriodo').textContent = `${d1}/${m1} → ${d2}/${m2}/${y2}`;
+  }
+
+  document.getElementById('kTotalUsos').textContent = fmt(usosFiltLinea);
+  document.getElementById('kUsoHoy').textContent    = usosHoy.toLocaleString('es-AR');
+  document.getElementById('lblHoy').textContent     = 'Usos ' + (fechaHoy ? fechaHoy.slice(8)+'/'+fechaHoy.slice(5,7) : 'hoy');
+  document.getElementById('kLineas').textContent    = lineasFilt.length;
+  document.getElementById('kDias').textContent      = nDias;
+  document.getElementById('kPromDia').textContent   = fmt(Math.round(totalUsos / nDias));
+  document.getElementById('kPicoHora').textContent  = picoEntry ? picoEntry[0] + 'hs' : '—';
+
+  renderChartDias(diasFilt.slice(-30));
+  renderChartHoras(horasArr);
+  renderTabla(lineasFilt, usosFiltLinea);
+}
+
+function renderChartDias(dias) {
+  const labels = dias.map(([f]) => { const [,m,d] = f.split('-'); return `${d}/${m}`; });
+  const vals   = dias.map(([,v]) => v);
+  const maxV   = Math.max(...vals) || 1;
+  if (chartDias) chartDias.destroy();
+  chartDias = new Chart(document.getElementById('chartDias').getContext('2d'), {
+    type: 'bar',
+    data: { labels, datasets: [{ data: vals, backgroundColor: vals.map(v => { const p=v/maxV; return `rgba(${Math.round(15+224*p)},${Math.round(52+18*(1-p))},${Math.round(96-36*p)},0.85)`; }), borderRadius: 3 }] },
+    options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false}, tooltip:{callbacks:{label:ctx=>' '+fmt(ctx.raw)+' usos'}} }, scales:{ x:{ticks:{font:{size:9},maxRotation:45,color:'#666'},grid:{display:false}}, y:{ticks:{font:{size:10},color:'#666',callback:v=>fmt(v)},grid:{color:'#f0f0f0'}} } }
+  });
+}
+
+function renderChartHoras(horasArr) {
+  const map  = Object.fromEntries(horasArr);
+  const vals = Array.from({length:24},(_,i)=>map[i]||0);
+  const maxV = Math.max(...vals)||1;
+  if (chartHoras) chartHoras.destroy();
+  chartHoras = new Chart(document.getElementById('chartHoras').getContext('2d'), {
+    type: 'bar',
+    data: { labels: Array.from({length:24},(_,i)=>i+'h'), datasets: [{ data: vals, backgroundColor: vals.map(v=>{const p=v/maxV;return `rgb(${Math.round(100+133*p)},${Math.round(180-130*p)},60)`;}), borderRadius: 2 }] },
+    options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false}, tooltip:{callbacks:{label:ctx=>' '+fmt(ctx.raw)+' usos'}} }, scales:{ x:{ticks:{font:{size:9},color:'#666'},grid:{display:false}}, y:{ticks:{font:{size:10},color:'#666',callback:v=>fmt(v)},grid:{color:'#f0f0f0'}} } }
+  });
+}
+
+function renderTabla(lineasFilt, totalUsos) {
+  const maxV  = lineasFilt[0]?.[1] || 1;
+  const tbody = document.getElementById('tbodyLineas');
+  tbody.innerHTML = '';
+  lineasFilt.forEach(([linea, usos]) => {
+    const pct  = ((usos/totalUsos)*100).toFixed(1);
+    const barW = Math.round((usos/maxV)*180);
+    const tr   = document.createElement('tr');
+    tr.innerHTML = `<td><b>${linea}</b></td><td>${fmt(usos)}</td><td><div class="bar-wrap"><div class="mini-bar" style="width:${barW}px"></div><span class="pct">${pct}%</span></div></td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+async function init() {
+  try {
+    const raw = await cargarDatos();
+    DATOS = agregarDatos(raw);
+
+    const sel = document.getElementById('fLinea');
+    DATOS.todasLineas.forEach(l => { const o=document.createElement('option'); o.value=o.textContent=l; sel.appendChild(o); });
+
+    document.getElementById('fDesde').value = DATOS.fechas.slice(-30)[0] || '';
+    document.getElementById('fHasta').value = DATOS.fechas.slice(-1)[0]  || '';
+    document.getElementById('lblFechaMax').textContent = DATOS.fechas.slice(-1)[0] || '—';
+    document.getElementById('lblFechaMin').textContent = DATOS.fechas[0] || '—';
+
+    setProgreso(100, 'Listo');
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('content').style.display = 'block';
+    document.getElementById('btnAplicar').addEventListener('click', render);
+    render();
+  } catch(e) {
+    document.getElementById('loading').style.display   = 'none';
+    document.getElementById('error-box').style.display = 'block';
+    document.getElementById('lblError').textContent    = e.message;
+  }
+}
+init();
+</script>
+</body>
+</html>
