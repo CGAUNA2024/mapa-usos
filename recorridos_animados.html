@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Recorridos — Líneas Urbanas Corrientes</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #0f172a; color: #e2e8f0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+  /* ── Header ── */
+  #header {
+    background: #0f172a;
+    border-bottom: 2px solid #e94560;
+    padding: 8px 14px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-shrink: 0;
+    min-height: 50px;
+  }
+  #logo-ersa img { height: 34px; }
+  #header h1 { font-size: 13px; color: #e94560; line-height: 1.3; }
+  #header h1 span.sub { display: block; font-size: 12px; color: #94a3b8; font-weight: normal; }
+  #speed-wrap { margin-left: auto; display: flex; align-items: center; gap: 8px; font-size: 12px; color: #94a3b8; }
+  #speed-wrap input { width: 90px; accent-color: #e94560; }
+  #speed-label { color: #e2e8f0; font-weight: bold; min-width: 38px; }
+
+  /* ── Main layout ── */
+  #main { display: flex; flex: 1; overflow: hidden; }
+
+  /* ── Map ── */
+  #map { flex: 1; }
+
+  /* ── Panel derecho ── */
+  #panel {
+    width: 210px;
+    background: #1e293b;
+    border-left: 1px solid #334155;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  #panel-title {
+    padding: 10px 12px 6px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #64748b;
+    border-bottom: 1px solid #334155;
+    flex-shrink: 0;
+  }
+  #sentido-bar {
+    padding: 8px 10px;
+    display: none;
+    gap: 6px;
+    border-bottom: 1px solid #334155;
+    flex-shrink: 0;
+  }
+  .sent-btn {
+    flex: 1;
+    padding: 5px 0;
+    border: 1px solid #475569;
+    background: #0f172a;
+    color: #94a3b8;
+    border-radius: 5px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .sent-btn.active { background: #e94560; border-color: #e94560; color: #fff; font-weight: bold; }
+  #lines-list { overflow-y: auto; flex: 1; padding: 8px; display: flex; flex-direction: column; gap: 5px; }
+  .line-btn {
+    width: 100%;
+    padding: 9px 12px;
+    border-radius: 7px;
+    border: 2px solid transparent;
+    background: #0f172a;
+    color: #e2e8f0;
+    font-size: 13px;
+    font-weight: bold;
+    cursor: pointer;
+    text-align: left;
+    transition: all .15s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .line-btn:hover { background: #1e293b; filter: brightness(1.2); }
+  .line-btn.active { background: #1e293b; }
+  .line-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+
+  /* ── Info barra inferior ── */
+  #info-bar {
+    background: #0f172a;
+    border-top: 1px solid #334155;
+    padding: 6px 14px;
+    font-size: 11px;
+    color: #64748b;
+    flex-shrink: 0;
+    min-height: 26px;
+  }
+  #info-bar span { color: #94a3b8; }
+
+  /* ── Bus marker ── */
+  .bus-div { font-size: 22px; line-height: 1; display: block; transform-origin: center center; filter: drop-shadow(0 1px 3px rgba(0,0,0,.9)); pointer-events: none; }
+
+  /* ── Scrollbar ── */
+  #lines-list::-webkit-scrollbar { width: 5px; }
+  #lines-list::-webkit-scrollbar-track { background: #0f172a; }
+  #lines-list::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<div id="header">
+  <div id="logo-ersa"><img src="logo_ersa.png" onerror="this.style.display='none'"></div>
+  <h1>🗺 Recorridos Animados<span class="sub">Líneas Urbanas CORRIENTES</span></h1>
+  <div id="speed-wrap">
+    <span>Velocidad:</span>
+    <input type="range" id="speed" min="1" max="10" value="4">
+    <span id="speed-label">×4</span>
+  </div>
+</div>
+
+<div id="main">
+  <div id="map"></div>
+  <div id="panel">
+    <div id="panel-title">Líneas</div>
+    <div id="sentido-bar">
+      <button class="sent-btn active" data-s="Ida">▶ Ida</button>
+      <button class="sent-btn" data-s="Vuelta">◀ Vuelta</button>
+    </div>
+    <div id="lines-list">
+      <div style="color:#475569;font-size:12px;text-align:center;padding:20px">Cargando recorridos...</div>
+    </div>
+  </div>
+</div>
+
+<div id="info-bar" id="info-bar">Seleccioná una línea para ver su recorrido animado.</div>
+
+<script>
+// ── Colores por línea ──────────────────────────────────────────
+const COLORS = {
+  '102A':'#FF6B6B','102B':'#FF9F43','102C':'#FECA57',
+  '103A':'#48DBFB','103B':'#FF9FF3','103C':'#54A0FF',
+  '104A':'#9B59B6','104B':'#00D2D3','104C':'#1DD1A1','104D':'#BDC3C7',
+  '105A':'#FD9644','105AT':'#A29BFE','105B':'#6C5CE7','105C':'#FDCB6E',
+  '106A':'#E17055','106B':'#74B9FF','106C':'#55EFC4',
+  '108A':'#0984E3','108C':'#D63031',
+  '109A':'#6AB04C','109B':'#F9CA24',
+  'RIACHUELO':'#22A6B3',
+};
+
+// ── Mapa ──────────────────────────────────────────────────────
+const map = L.map('map', {
+  center: [-27.48, -58.84],
+  zoom: 13,
+  zoomControl: true,
+});
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '© OpenStreetMap',
+  maxZoom: 19,
+}).addTo(map);
+
+// ── Estado ────────────────────────────────────────────────────
+let RUTAS = {};           // linea → { Ida: [[lat,lon],...], Vuelta: [[lat,lon],...] }
+let activeLine = null;
+let activeSentido = 'Ida';
+let animLayer = null;     // polyline activa
+let busMarker = null;
+let animTimer = null;
+let animIdx = 0;
+let animPts = [];         // puntos interpolados
+
+// ── Cargar recorridos ─────────────────────────────────────────
+fetch('https://raw.githubusercontent.com/CGAUNA2024/mapa-usos/main/recorridos.json')
+  .then(r => r.json())
+  .then(data => {
+    // Agrupar por línea y sentido; concatenar múltiples tramos
+    data.forEach(e => {
+      const l = e.l, s = e.s;
+      if (!RUTAS[l]) RUTAS[l] = {};
+      // Convertir [lon,lat] → [lat,lon] para Leaflet
+      const pts = e.c.map(c => [c[1], c[0]]);
+      if (!RUTAS[l][s]) RUTAS[l][s] = pts;
+      else RUTAS[l][s] = RUTAS[l][s].concat(pts); // unir tramos
+    });
+    buildPanel();
+  })
+  .catch(err => {
+    document.getElementById('lines-list').innerHTML =
+      '<div style="color:#e94560;font-size:12px;padding:16px">Error cargando recorridos.<br>Verificá la conexión.</div>';
+  });
+
+// ── Construir panel de líneas ─────────────────────────────────
+function buildPanel() {
+  const list = document.getElementById('lines-list');
+  list.innerHTML = '';
+  Object.keys(RUTAS).sort().forEach(linea => {
+    const color = COLORS[linea] || '#94a3b8';
+    const btn = document.createElement('button');
+    btn.className = 'line-btn';
+    btn.dataset.linea = linea;
+    btn.style.borderColor = color + '55';
+    btn.innerHTML = `<span class="line-dot" style="background:${color}"></span>${linea}`;
+    btn.addEventListener('click', () => selectLine(linea));
+    list.appendChild(btn);
+  });
+}
+
+// ── Seleccionar línea ─────────────────────────────────────────
+function selectLine(linea) {
+  // Destacar botón activo
+  document.querySelectorAll('.line-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.linea === linea);
+    const c = COLORS[b.dataset.linea] || '#94a3b8';
+    b.style.borderColor = b.classList.contains('active') ? c : c + '55';
+  });
+
+  activeLine = linea;
+  const sentidos = Object.keys(RUTAS[linea]);
+
+  // Mostrar barra de sentido
+  const bar = document.getElementById('sentido-bar');
+  bar.style.display = sentidos.length > 1 ? 'flex' : 'none';
+
+  // Elegir sentido disponible
+  if (!sentidos.includes(activeSentido)) activeSentido = sentidos[0];
+  document.querySelectorAll('.sent-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.s === activeSentido);
+    b.style.display = sentidos.includes(b.dataset.s) ? '' : 'none';
+  });
+
+  startAnimation();
+}
+
+// ── Iniciar animación ─────────────────────────────────────────
+function startAnimation() {
+  if (!activeLine) return;
+  const pts = RUTAS[activeLine]?.[activeSentido];
+  if (!pts || pts.length < 2) return;
+
+  stopAnimation();
+
+  const color = COLORS[activeLine] || '#fff';
+
+  // Dibujar recorrido
+  if (animLayer) map.removeLayer(animLayer);
+  animLayer = L.polyline(pts, {
+    color: color,
+    weight: 5,
+    opacity: 0.85,
+    lineJoin: 'round',
+    lineCap: 'round',
+  }).addTo(map);
+  map.fitBounds(animLayer.getBounds(), { padding: [30, 30] });
+
+  // Interpolar puntos para animación suave
+  animPts = interpolate(pts, 40);
+  animIdx = 0;
+
+  // Crear marcador del bus
+  if (busMarker) map.removeLayer(busMarker);
+  busMarker = L.marker(animPts[0], {
+    icon: busIcon(0),
+    zIndexOffset: 1000,
+  }).addTo(map);
+
+  // Info bar
+  const total = routeLength(animPts);
+  document.getElementById('info-bar').innerHTML =
+    `<span>${activeLine} — ${activeSentido}</span> &nbsp;|&nbsp; ${(total/1000).toFixed(1)} km de recorrido`;
+
+  runStep();
+}
+
+function runStep() {
+  if (animIdx >= animPts.length - 1) {
+    // Reiniciar desde el principio
+    setTimeout(() => { animIdx = 0; runStep(); }, 1200);
+    return;
+  }
+
+  const speed = parseInt(document.getElementById('speed').value);
+  const a = animPts[animIdx], b = animPts[animIdx + 1];
+  const dist = L.latLng(a).distanceTo(L.latLng(b));
+  const delay = Math.max(10, (dist / (speed * 8)));
+
+  busMarker.setLatLng(b);
+  busMarker.setIcon(busIcon(bearing(a, b)));
+
+  animIdx++;
+  animTimer = setTimeout(runStep, delay);
+}
+
+function stopAnimation() {
+  if (animTimer) { clearTimeout(animTimer); animTimer = null; }
+}
+
+// ── Ícono del bus rotado ───────────────────────────────────────
+function busIcon(deg) {
+  return L.divIcon({
+    className: '',
+    html: `<span class="bus-div" style="transform:rotate(${deg - 90}deg)">🚌</span>`,
+    iconSize: [28, 28],
+    iconAnchor: [14, 14],
+  });
+}
+
+// ── Interpolación de ruta (puntos cada N metros) ───────────────
+function interpolate(pts, stepM) {
+  const out = [pts[0]];
+  for (let i = 0; i < pts.length - 1; i++) {
+    const a = L.latLng(pts[i]), b = L.latLng(pts[i+1]);
+    const d = a.distanceTo(b);
+    const steps = Math.max(1, Math.ceil(d / stepM));
+    for (let j = 1; j <= steps; j++) {
+      const t = j / steps;
+      out.push([pts[i][0] + (pts[i+1][0] - pts[i][0]) * t,
+                pts[i][1] + (pts[i+1][1] - pts[i][1]) * t]);
+    }
+  }
+  return out;
+}
+
+// ── Bearing entre dos puntos [lat,lon] ────────────────────────
+function bearing(a, b) {
+  const lat1 = a[0] * Math.PI / 180, lat2 = b[0] * Math.PI / 180;
+  const dLon = (b[1] - a[1]) * Math.PI / 180;
+  const y = Math.sin(dLon) * Math.cos(lat2);
+  const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
+  return Math.atan2(y, x) * 180 / Math.PI;
+}
+
+// ── Longitud total de ruta ────────────────────────────────────
+function routeLength(pts) {
+  let d = 0;
+  for (let i = 0; i < pts.length - 1; i++) d += L.latLng(pts[i]).distanceTo(L.latLng(pts[i+1]));
+  return d;
+}
+
+// ── Eventos ───────────────────────────────────────────────────
+document.querySelectorAll('.sent-btn').forEach(b => {
+  b.addEventListener('click', () => {
+    activeSentido = b.dataset.s;
+    document.querySelectorAll('.sent-btn').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    startAnimation();
+  });
+});
+
+document.getElementById('speed').addEventListener('input', function() {
+  document.getElementById('speed-label').textContent = '×' + this.value;
+});
+</script>
+</body>
+</html>
