@@ -133,8 +133,8 @@
   <div id="route-title"></div>
   <div id="speed-wrap">
     <span>Velocidad:</span>
-    <input type="range" id="speed" min="1" max="10" value="2">
-    <span id="speed-label">×2</span>
+    <input type="range" id="speed" min="0.25" max="1" step="0.25" value="0.5">
+    <span id="speed-label">×0.5</span>
   </div>
 </div>
 
@@ -348,7 +348,7 @@ function runStep() {
   const speed = parseInt(document.getElementById('speed').value);
   const a = animPts[animIdx], b = animPts[animIdx + 1];
   const dist = L.latLng(a).distanceTo(L.latLng(b));
-  const delay = Math.max(12, dist / (speed * 3.5));  // más lento que antes
+  const delay = Math.max(10, dist / (speed * 7));   // speed 0.25=muy lento … 1=normal
 
   const brg = bearing(a, b);
   busMarker.setLatLng(b);
@@ -420,7 +420,7 @@ document.querySelectorAll('.sent-btn').forEach(b => {
 });
 
 document.getElementById('speed').addEventListener('input', function() {
-  document.getElementById('speed-label').textContent = '×' + this.value;
+  document.getElementById('speed-label').textContent = '×' + parseFloat(this.value).toFixed(2).replace('.00','');
 });
 </script>
 </body>
