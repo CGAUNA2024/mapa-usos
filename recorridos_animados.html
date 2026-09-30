@@ -345,7 +345,7 @@ function runStep() {
     setTimeout(() => { animIdx = 0; runStep(); }, 1500);
     return;
   }
-  const speed = parseInt(document.getElementById('speed').value);
+  const speed = parseFloat(document.getElementById('speed').value);
   const a = animPts[animIdx], b = animPts[animIdx + 1];
   const dist = L.latLng(a).distanceTo(L.latLng(b));
   const delay = Math.max(30, 2400 / speed);  // speed 0.25→9600ms, 0.5→4800ms, 0.75→3200ms, 1→2400ms
