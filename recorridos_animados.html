@@ -14,24 +14,36 @@
   #header {
     background: #0f172a;
     border-bottom: 2px solid #e94560;
-    padding: 8px 14px;
+    padding: 7px 14px;
     display: flex;
     align-items: center;
-    gap: 14px;
+    gap: 12px;
     flex-shrink: 0;
-    min-height: 50px;
+    min-height: 52px;
   }
-  #logo-ersa img { height: 34px; }
-  #header h1 { font-size: 13px; color: #e94560; line-height: 1.3; }
-  #header h1 span.sub { display: block; font-size: 12px; color: #94a3b8; font-weight: normal; }
-  #speed-wrap { margin-left: auto; display: flex; align-items: center; gap: 8px; font-size: 12px; color: #94a3b8; }
-  #speed-wrap input { width: 90px; accent-color: #e94560; }
-  #speed-label { color: #e2e8f0; font-weight: bold; min-width: 38px; }
+  #logo-ersa img { height: 32px; }
+  #header h1 { font-size: 13px; color: #e94560; line-height: 1.3; white-space: nowrap; }
+  #header h1 span.sub { display: block; font-size: 11px; color: #94a3b8; font-weight: normal; }
+
+  #route-title {
+    font-size: 14px;
+    font-weight: bold;
+    color: #f1f5f9;
+    padding: 0 12px;
+    border-left: 2px solid #334155;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 420px;
+  }
+  #route-title .rt-desc { font-size: 12px; font-weight: normal; color: #94a3b8; }
+
+  #speed-wrap { margin-left: auto; display: flex; align-items: center; gap: 8px; font-size: 12px; color: #94a3b8; white-space: nowrap; }
+  #speed-wrap input { width: 80px; accent-color: #e94560; }
+  #speed-label { color: #e2e8f0; font-weight: bold; min-width: 30px; }
 
   /* ── Main layout ── */
   #main { display: flex; flex: 1; overflow: hidden; }
-
-  /* ── Map ── */
   #map { flex: 1; }
 
   /* ── Panel derecho ── */
@@ -45,7 +57,7 @@
     flex-shrink: 0;
   }
   #panel-title {
-    padding: 10px 12px 6px;
+    padding: 9px 12px 6px;
     font-size: 11px;
     text-transform: uppercase;
     letter-spacing: 1px;
@@ -54,59 +66,58 @@
     flex-shrink: 0;
   }
   #sentido-bar {
-    padding: 8px 10px;
+    padding: 7px 10px;
     display: none;
     gap: 6px;
     border-bottom: 1px solid #334155;
     flex-shrink: 0;
   }
   .sent-btn {
-    flex: 1;
-    padding: 5px 0;
-    border: 1px solid #475569;
-    background: #0f172a;
-    color: #94a3b8;
-    border-radius: 5px;
-    font-size: 12px;
-    cursor: pointer;
-    transition: all .15s;
+    flex: 1; padding: 5px 0;
+    border: 1px solid #475569; background: #0f172a; color: #94a3b8;
+    border-radius: 5px; font-size: 12px; cursor: pointer; transition: all .15s;
   }
   .sent-btn.active { background: #e94560; border-color: #e94560; color: #fff; font-weight: bold; }
   #lines-list { overflow-y: auto; flex: 1; padding: 8px; display: flex; flex-direction: column; gap: 5px; }
   .line-btn {
-    width: 100%;
-    padding: 9px 12px;
-    border-radius: 7px;
-    border: 2px solid transparent;
-    background: #0f172a;
-    color: #e2e8f0;
-    font-size: 13px;
-    font-weight: bold;
-    cursor: pointer;
-    text-align: left;
-    transition: all .15s;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    width: 100%; padding: 8px 12px;
+    border-radius: 7px; border: 2px solid transparent;
+    background: #0f172a; color: #e2e8f0;
+    font-size: 13px; font-weight: bold;
+    cursor: pointer; text-align: left; transition: all .15s;
+    display: flex; align-items: center; gap: 8px;
   }
   .line-btn:hover { background: #1e293b; filter: brightness(1.2); }
   .line-btn.active { background: #1e293b; }
-  .line-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+  .line-dot { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; }
 
-  /* ── Info barra inferior ── */
+  /* ── Info bar inferior ── */
   #info-bar {
-    background: #0f172a;
-    border-top: 1px solid #334155;
-    padding: 6px 14px;
-    font-size: 11px;
-    color: #64748b;
-    flex-shrink: 0;
-    min-height: 26px;
+    background: #0f172a; border-top: 1px solid #334155;
+    padding: 5px 14px; font-size: 11px; color: #64748b;
+    flex-shrink: 0; min-height: 24px;
   }
   #info-bar span { color: #94a3b8; }
 
   /* ── Bus marker ── */
-  .bus-div { font-size: 22px; line-height: 1; display: block; transform-origin: center center; filter: drop-shadow(0 1px 3px rgba(0,0,0,.9)); pointer-events: none; }
+  .bus-wrapper { display: inline-flex; flex-direction: column; align-items: flex-start; }
+  .bus-label {
+    background: rgba(15,23,42,.88);
+    color: #f1f5f9;
+    font-size: 10px; font-weight: 600;
+    padding: 2px 6px; border-radius: 4px;
+    white-space: nowrap; margin-bottom: 2px;
+    border: 1px solid rgba(255,255,255,.15);
+    max-width: 170px; overflow: hidden; text-overflow: ellipsis;
+    pointer-events: none;
+    box-shadow: 0 1px 4px rgba(0,0,0,.6);
+  }
+  .bus-emoji {
+    font-size: 24px; line-height: 1;
+    transform-origin: center center;
+    filter: drop-shadow(0 1px 4px rgba(0,0,0,.8));
+    pointer-events: none; display: block;
+  }
 
   /* ── Scrollbar ── */
   #lines-list::-webkit-scrollbar { width: 5px; }
@@ -118,11 +129,12 @@
 
 <div id="header">
   <div id="logo-ersa"><img src="logo_ersa.png" onerror="this.style.display='none'"></div>
-  <h1>🗺 Recorridos Animados<span class="sub">Líneas Urbanas CORRIENTES</span></h1>
+  <h1>🗺 Recorridos<span class="sub">Líneas Urbanas CORRIENTES</span></h1>
+  <div id="route-title"></div>
   <div id="speed-wrap">
     <span>Velocidad:</span>
-    <input type="range" id="speed" min="1" max="10" value="4">
-    <span id="speed-label">×4</span>
+    <input type="range" id="speed" min="1" max="10" value="2">
+    <span id="speed-label">×2</span>
   </div>
 </div>
 
@@ -140,10 +152,10 @@
   </div>
 </div>
 
-<div id="info-bar" id="info-bar">Seleccioná una línea para ver su recorrido animado.</div>
+<div id="info-bar">Seleccioná una línea para ver su recorrido animado.</div>
 
 <script>
-// ── Colores por línea ──────────────────────────────────────────
+// ── Colores ────────────────────────────────────────────────────
 const COLORS = {
   '102A':'#FF6B6B','102B':'#FF9F43','102C':'#FECA57',
   '103A':'#48DBFB','103B':'#FF9FF3','103C':'#54A0FF',
@@ -155,49 +167,108 @@ const COLORS = {
   'RIACHUELO':'#22A6B3',
 };
 
-// ── Mapa ──────────────────────────────────────────────────────
-const map = L.map('map', {
-  center: [-27.48, -58.84],
-  zoom: 13,
-  zoomControl: true,
-});
+// ── Descripciones Ida (Vuelta se genera automáticamente invirtiendo) ──
+const DESC_IDA = {
+  '102A': 'B° 17 de Agosto - Puerto',
+  '102B': 'B° Laguna Seca - Puerto',
+  '102C': 'B° Laguna Brava - Puerto',
+  '103A': 'Alta Gracia - Puerto',
+  '103B': 'B° Montaña - Puerto',
+  '103C': 'B° Esperanza - Montaña / Puerto',
+  '104A': 'B° Juan de Vera - Centro',
+  '104B': 'B° Patono - Centro',
+  '104C': 'Mil Viviendas - Morgue',
+  '104D': 'Mil Viviendas - Morgue',
+  '105A': 'Molino Punta - Centro',
+  '105B': 'Apipé - Centro',
+  '105C': 'B° Perichon - Centro',
+  '105AT': 'Punta Tatacuá - Centro',
+  '106A': 'Pirayuí - Centro',
+  '106B': 'B° Nuevo - Puerto',
+  '106C': '500 Viviendas - Centro',
+  '108A': 'B° Quintana - Puente',
+  '108C': 'B° Quintana - Centro',
+  '109A': 'B° Río Paraná - Parque del Recuerdo',
+  '109B': 'Terminal - Yeco\'a',
+  'RIACHUELO': 'Riachuelo - Puerto',
+};
 
+function getDesc(linea, sentido) {
+  const ida = DESC_IDA[linea];
+  if (!ida) return '';
+  if (sentido === 'Ida') return ida;
+  // Vuelta: invertir "A - B" → "B - A"
+  const sep = ida.indexOf(' - ');
+  if (sep === -1) return ida;
+  return ida.slice(sep + 3) + ' - ' + ida.slice(0, sep);
+}
+
+// ── Mapa ──────────────────────────────────────────────────────
+const map = L.map('map', { center: [-27.48, -58.84], zoom: 13 });
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  attribution: '© OpenStreetMap',
-  maxZoom: 19,
+  attribution: '© OpenStreetMap', maxZoom: 19,
 }).addTo(map);
 
 // ── Estado ────────────────────────────────────────────────────
-let RUTAS = {};           // linea → { Ida: [[lat,lon],...], Vuelta: [[lat,lon],...] }
-let activeLine = null;
-let activeSentido = 'Ida';
-let animLayer = null;     // polyline activa
-let busMarker = null;
-let animTimer = null;
-let animIdx = 0;
-let animPts = [];         // puntos interpolados
+let RUTAS = {};
+let activeLine = null, activeSentido = 'Ida';
+let animLayer = null, busMarker = null, animTimer = null;
+let animIdx = 0, animPts = [];
+let lastBearing = 0;
+
+// ── Nombre de calle (Nominatim, throttled) ─────────────────────
+let currentStreet = '';
+let lastGeocodePos = null;
+let lastGeocodeTime = 0;
+
+async function updateStreet(lat, lon) {
+  const now = Date.now();
+  if (now - lastGeocodeTime < 1800) return;          // máx 1 llamada cada 1.8s
+  if (lastGeocodePos) {
+    const d = L.latLng(lat, lon).distanceTo(L.latLng(lastGeocodePos));
+    if (d < 80) return;                               // no llamar si no se movió 80m
+  }
+  lastGeocodeTime = now;
+  lastGeocodePos = [lat, lon];
+  try {
+    const r = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?lat=${lat.toFixed(5)}&lon=${lon.toFixed(5)}&format=json&accept-language=es`,
+      { headers: { 'User-Agent': 'ERSA-MapaCorrientes/1.0' } }
+    );
+    const data = await r.json();
+    const road = data.address?.road || data.address?.pedestrian || data.address?.path || '';
+    if (road !== currentStreet) {
+      currentStreet = road;
+      if (busMarker) busMarker.setIcon(busIcon(lastBearing));
+    }
+  } catch(e) {}
+}
 
 // ── Cargar recorridos ─────────────────────────────────────────
 fetch('https://raw.githubusercontent.com/CGAUNA2024/mapa-usos/main/recorridos.json')
   .then(r => r.json())
   .then(data => {
-    // Agrupar por línea y sentido; concatenar múltiples tramos
     data.forEach(e => {
       const l = e.l, s = e.s;
       if (!RUTAS[l]) RUTAS[l] = {};
-      // Convertir [lon,lat] → [lat,lon] para Leaflet
-      const pts = e.c.map(c => [c[1], c[0]]);
+      const pts = e.c.map(c => [c[1], c[0]]);   // [lon,lat] → [lat,lon]
       if (!RUTAS[l][s]) RUTAS[l][s] = pts;
-      else RUTAS[l][s] = RUTAS[l][s].concat(pts); // unir tramos
+      else RUTAS[l][s] = RUTAS[l][s].concat(pts);
+    });
+    // Para Vuelta: si existe, usarla; si no, invertir la Ida
+    Object.keys(RUTAS).forEach(l => {
+      if (!RUTAS[l]['Vuelta'] && RUTAS[l]['Ida']) {
+        RUTAS[l]['Vuelta'] = [...RUTAS[l]['Ida']].reverse();
+      }
     });
     buildPanel();
   })
-  .catch(err => {
+  .catch(() => {
     document.getElementById('lines-list').innerHTML =
       '<div style="color:#e94560;font-size:12px;padding:16px">Error cargando recorridos.<br>Verificá la conexión.</div>';
   });
 
-// ── Construir panel de líneas ─────────────────────────────────
+// ── Panel de líneas ───────────────────────────────────────────
 function buildPanel() {
   const list = document.getElementById('lines-list');
   list.innerHTML = '';
@@ -215,27 +286,19 @@ function buildPanel() {
 
 // ── Seleccionar línea ─────────────────────────────────────────
 function selectLine(linea) {
-  // Destacar botón activo
   document.querySelectorAll('.line-btn').forEach(b => {
     b.classList.toggle('active', b.dataset.linea === linea);
     const c = COLORS[b.dataset.linea] || '#94a3b8';
     b.style.borderColor = b.classList.contains('active') ? c : c + '55';
   });
-
   activeLine = linea;
   const sentidos = Object.keys(RUTAS[linea]);
-
-  // Mostrar barra de sentido
   const bar = document.getElementById('sentido-bar');
-  bar.style.display = sentidos.length > 1 ? 'flex' : 'none';
-
-  // Elegir sentido disponible
+  bar.style.display = 'flex';
   if (!sentidos.includes(activeSentido)) activeSentido = sentidos[0];
   document.querySelectorAll('.sent-btn').forEach(b => {
     b.classList.toggle('active', b.dataset.s === activeSentido);
-    b.style.display = sentidos.includes(b.dataset.s) ? '' : 'none';
   });
-
   startAnimation();
 }
 
@@ -244,55 +307,54 @@ function startAnimation() {
   if (!activeLine) return;
   const pts = RUTAS[activeLine]?.[activeSentido];
   if (!pts || pts.length < 2) return;
-
   stopAnimation();
+
+  // Resetear nombre de calle
+  currentStreet = '';
+  lastGeocodePos = null;
 
   const color = COLORS[activeLine] || '#fff';
 
-  // Dibujar recorrido
+  // Recorrido
   if (animLayer) map.removeLayer(animLayer);
-  animLayer = L.polyline(pts, {
-    color: color,
-    weight: 5,
-    opacity: 0.85,
-    lineJoin: 'round',
-    lineCap: 'round',
-  }).addTo(map);
+  animLayer = L.polyline(pts, { color, weight: 5, opacity: 0.88, lineJoin: 'round', lineCap: 'round' }).addTo(map);
   map.fitBounds(animLayer.getBounds(), { padding: [30, 30] });
 
-  // Interpolar puntos para animación suave
-  animPts = interpolate(pts, 40);
+  animPts = interpolate(pts, 35);
   animIdx = 0;
 
-  // Crear marcador del bus
   if (busMarker) map.removeLayer(busMarker);
-  busMarker = L.marker(animPts[0], {
-    icon: busIcon(0),
-    zIndexOffset: 1000,
-  }).addTo(map);
+  busMarker = L.marker(animPts[0], { icon: busIcon(0), zIndexOffset: 1000 }).addTo(map);
+
+  // Título en header
+  const desc = getDesc(activeLine, activeSentido);
+  document.getElementById('route-title').innerHTML =
+    `<strong style="color:${color}">${activeLine} ${activeSentido}</strong>` +
+    (desc ? ` <span class="rt-desc">&nbsp;| ${desc}</span>` : '');
 
   // Info bar
-  const total = routeLength(animPts);
+  const km = (routeLength(animPts) / 1000).toFixed(1);
   document.getElementById('info-bar').innerHTML =
-    `<span>${activeLine} — ${activeSentido}</span> &nbsp;|&nbsp; ${(total/1000).toFixed(1)} km de recorrido`;
+    `<span>${activeLine} ${activeSentido}</span> &nbsp;|&nbsp; ${km} km de recorrido`;
 
   runStep();
 }
 
 function runStep() {
   if (animIdx >= animPts.length - 1) {
-    // Reiniciar desde el principio
-    setTimeout(() => { animIdx = 0; runStep(); }, 1200);
+    setTimeout(() => { animIdx = 0; runStep(); }, 1500);
     return;
   }
-
   const speed = parseInt(document.getElementById('speed').value);
   const a = animPts[animIdx], b = animPts[animIdx + 1];
   const dist = L.latLng(a).distanceTo(L.latLng(b));
-  const delay = Math.max(10, (dist / (speed * 8)));
+  const delay = Math.max(12, dist / (speed * 3.5));  // más lento que antes
 
+  const brg = bearing(a, b);
   busMarker.setLatLng(b);
-  busMarker.setIcon(busIcon(bearing(a, b)));
+  busMarker.setIcon(busIcon(brg));
+
+  updateStreet(b[0], b[1]);  // async, no bloquea
 
   animIdx++;
   animTimer = setTimeout(runStep, delay);
@@ -302,17 +364,21 @@ function stopAnimation() {
   if (animTimer) { clearTimeout(animTimer); animTimer = null; }
 }
 
-// ── Ícono del bus rotado ───────────────────────────────────────
+// ── Bus icon con etiqueta de calle ────────────────────────────
 function busIcon(deg) {
+  lastBearing = deg;
+  const label = currentStreet
+    ? `<div class="bus-label">📍 ${currentStreet}</div>`
+    : '';
   return L.divIcon({
     className: '',
-    html: `<span class="bus-div" style="transform:rotate(${deg - 90}deg)">🚌</span>`,
-    iconSize: [28, 28],
-    iconAnchor: [14, 14],
+    html: `<div class="bus-wrapper">${label}<span class="bus-emoji" style="transform:rotate(${deg - 90}deg)">🚌</span></div>`,
+    iconSize: [28, currentStreet ? 50 : 28],
+    iconAnchor: [14, currentStreet ? 46 : 24],
   });
 }
 
-// ── Interpolación de ruta (puntos cada N metros) ───────────────
+// ── Interpolación ─────────────────────────────────────────────
 function interpolate(pts, stepM) {
   const out = [pts[0]];
   for (let i = 0; i < pts.length - 1; i++) {
@@ -321,26 +387,25 @@ function interpolate(pts, stepM) {
     const steps = Math.max(1, Math.ceil(d / stepM));
     for (let j = 1; j <= steps; j++) {
       const t = j / steps;
-      out.push([pts[i][0] + (pts[i+1][0] - pts[i][0]) * t,
-                pts[i][1] + (pts[i+1][1] - pts[i][1]) * t]);
+      out.push([pts[i][0] + (pts[i+1][0]-pts[i][0])*t, pts[i][1] + (pts[i+1][1]-pts[i][1])*t]);
     }
   }
   return out;
 }
 
-// ── Bearing entre dos puntos [lat,lon] ────────────────────────
+// ── Bearing ───────────────────────────────────────────────────
 function bearing(a, b) {
-  const lat1 = a[0] * Math.PI / 180, lat2 = b[0] * Math.PI / 180;
-  const dLon = (b[1] - a[1]) * Math.PI / 180;
-  const y = Math.sin(dLon) * Math.cos(lat2);
-  const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
-  return Math.atan2(y, x) * 180 / Math.PI;
+  const lat1 = a[0]*Math.PI/180, lat2 = b[0]*Math.PI/180;
+  const dLon = (b[1]-a[1])*Math.PI/180;
+  const y = Math.sin(dLon)*Math.cos(lat2);
+  const x = Math.cos(lat1)*Math.sin(lat2) - Math.sin(lat1)*Math.cos(lat2)*Math.cos(dLon);
+  return Math.atan2(y, x)*180/Math.PI;
 }
 
-// ── Longitud total de ruta ────────────────────────────────────
+// ── Longitud ──────────────────────────────────────────────────
 function routeLength(pts) {
   let d = 0;
-  for (let i = 0; i < pts.length - 1; i++) d += L.latLng(pts[i]).distanceTo(L.latLng(pts[i+1]));
+  for (let i = 0; i < pts.length-1; i++) d += L.latLng(pts[i]).distanceTo(L.latLng(pts[i+1]));
   return d;
 }
 
