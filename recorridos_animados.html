@@ -169,28 +169,28 @@ const COLORS = {
 
 // ── Descripciones Ida (Vuelta se genera automáticamente invirtiendo) ──
 const DESC_IDA = {
-  '102A': 'B° 17 de Agosto - Puerto',
-  '102B': 'B° Laguna Seca - Puerto',
-  '102C': 'B° Laguna Brava - Puerto',
-  '103A': 'Alta Gracia - Puerto',
-  '103B': 'B° Montaña - Puerto',
-  '103C': 'B° Esperanza - Montaña / Puerto',
-  '104A': 'B° Juan de Vera - Centro',
-  '104B': 'B° Patono - Centro',
-  '104C': 'Mil Viviendas - Morgue',
-  '104D': 'Mil Viviendas - Morgue',
-  '105A': 'Molino Punta - Centro',
-  '105B': 'Apipé - Centro',
-  '105C': 'B° Perichon - Centro',
-  '105AT': 'Punta Tatacuá - Centro',
-  '106A': 'Pirayuí - Centro',
-  '106B': 'B° Nuevo - Puerto',
-  '106C': '500 Viviendas - Centro',
-  '108A': 'B° Quintana - Puente',
-  '108C': 'B° Quintana - Centro',
-  '109A': 'B° Río Paraná - Parque del Recuerdo',
-  '109B': 'Terminal - Yeco\'a',
-  'RIACHUELO': 'Riachuelo - Puerto',
+  '102A':     'B° 17 de Agosto - Puerto',
+  '102B':     'B° Laguna Seca - Puerto',
+  '102C':     'B° Laguna Brava - Puerto',
+  '103A':     'B° San Antonio - Puerto',
+  '103B':     'B° Dr. Montaña - Puerto',
+  '103C':     'Calesita (B° Esperanza/Montaña) - B° Esperanza/Puerto',
+  '104A':     'B° Juan de Vera - Morgue',
+  '104B':     'B° Patono - Centro',
+  '104C':     'B° Pujol - B° Río Paraná',
+  '104D':     'B° 1000 Viv. - Morgue',
+  '105A':     'B° Molina Punta - Puerto',
+  '105AT':    'Calesita - (Punta Taitalo - M. Punta)',
+  '105B':     'B° Apipé - Puerto',
+  '105C':     'Perichon - Puerto',
+  '106A':     'B° Pirayuí - Puerto',
+  '106B':     'B° Nuevo - Puerto',
+  '106C':     'B° 500V (Pirayuí Nuevo) - Puerto',
+  '108A':     'B° Quintana - Cuenca',
+  '108C':     'B° 40 Viv. B° San Roque - Centro',
+  '109A':     'B° Río Paraná - Pque. del Recuerdo',
+  '109B':     'B° Río Paraná/Terminal - B° Yecohá',
+  'RIACHUELO':'Riachuelo - Puerto',
 };
 
 function getDesc(linea, sentido) {
@@ -348,7 +348,7 @@ function runStep() {
   const speed = parseFloat(document.getElementById('speed').value);
   const a = animPts[animIdx], b = animPts[animIdx + 1];
   const dist = L.latLng(a).distanceTo(L.latLng(b));
-  const delay = Math.max(30, 2400 / speed);  // speed 0.25→9600ms, 0.5→4800ms, 0.75→3200ms, 1→2400ms
+  const delay = Math.max(30, 500 / speed);   // ×0.25→2000ms  ×0.5→1000ms  ×0.75→667ms  ×1→500ms
 
   const brg = bearing(a, b);
   busMarker.setLatLng(b);
