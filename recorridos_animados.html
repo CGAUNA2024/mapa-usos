@@ -140,7 +140,7 @@
   <button id="btn-paradas" title="Mostrar/ocultar paradas">🚏 Paradas</button>
   <div id="speed-wrap">
     <span>Velocidad:</span>
-    <input type="range" id="speed" min="0" max="6" step="1" value="2">
+    <input type="range" id="speed" min="0" max="12" step="1" value="2">
     <span id="speed-label">×0.5</span>
   </div>
 </div>
@@ -362,7 +362,7 @@ function runStep() {
     setTimeout(() => { animIdx = 0; runStep(); }, 1500);
     return;
   }
-  const SPEEDS = [0.1, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5];
+  const SPEEDS = [0.1, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 2.25, 2.5, 2.75, 3.0];
   const speed = SPEEDS[parseInt(document.getElementById('speed').value)] || 0.5;
   const a = animPts[animIdx], b = animPts[animIdx + 1];
   const dist = L.latLng(a).distanceTo(L.latLng(b));
@@ -385,16 +385,20 @@ function stopAnimation() {
 // ── Bus icon con etiqueta de calle ────────────────────────────
 function busIcon(deg) {
   lastBearing = deg;
-  // 🚌 emoji mira a la derecha por defecto (east).
-  // Cuando va hacia la izquierda (bearing 180-360) usamos scaleX(-1) para no invertirlo.
+  // 🚌 mira a la DERECHA por defecto. Ruedas abajo.
+  // Limitamos a ±72° para que las ruedas nunca queden arriba,
+  // y usamos scaleX(-1) cuando viaja hacia la izquierda.
   const norm = ((deg % 360) + 360) % 360;
+  const MAX = 72;
   let transform;
-  if (norm >= 0 && norm < 180) {
-    // Mitad derecha del compás: rotación directa
-    transform = `rotate(${deg - 90}deg)`;
+  if (norm <= 180) {
+    // Mitad este: rotación directa, clampeada
+    const r = Math.max(-MAX, Math.min(MAX, norm - 90));
+    transform = `rotate(${r}deg)`;
   } else {
-    // Mitad izquierda: espejo horizontal + rotación complementaria
-    transform = `scaleX(-1) rotate(${270 - deg}deg)`;
+    // Mitad oeste: espejo + rotación clampeada
+    const r = Math.max(-MAX, Math.min(MAX, 270 - norm));
+    transform = `scaleX(-1) rotate(${r}deg)`;
   }
   const label = currentStreet
     ? `<div class="bus-label">📍 ${currentStreet}</div>`
@@ -475,7 +479,7 @@ document.querySelectorAll('.sent-btn').forEach(b => {
 });
 
 document.getElementById('speed').addEventListener('input', function() {
-  const SPEEDS = [0.1, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5];
+  const SPEEDS = [0.1, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 2.25, 2.5, 2.75, 3.0];
   const v = SPEEDS[parseInt(this.value)];
   document.getElementById('speed-label').textContent = '×' + v;
 });
