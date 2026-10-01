@@ -133,7 +133,7 @@
   <div id="route-title"></div>
   <div id="speed-wrap">
     <span>Velocidad:</span>
-    <input type="range" id="speed" min="0.25" max="1" step="0.25" value="0.5">
+    <input type="range" id="speed" min="0" max="6" step="1" value="2">
     <span id="speed-label">×0.5</span>
   </div>
 </div>
@@ -345,10 +345,11 @@ function runStep() {
     setTimeout(() => { animIdx = 0; runStep(); }, 1500);
     return;
   }
-  const speed = parseFloat(document.getElementById('speed').value);
+  const SPEEDS = [0.1, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5];
+  const speed = SPEEDS[parseInt(document.getElementById('speed').value)] || 0.5;
   const a = animPts[animIdx], b = animPts[animIdx + 1];
   const dist = L.latLng(a).distanceTo(L.latLng(b));
-  const delay = Math.max(30, 500 / speed);   // ×0.25→2000ms  ×0.5→1000ms  ×0.75→667ms  ×1→500ms
+  const delay = Math.max(30, 500 / speed);   // ×0.1→5000ms … ×1→500ms … ×1.5→333ms
 
   const brg = bearing(a, b);
   busMarker.setLatLng(b);
@@ -367,12 +368,23 @@ function stopAnimation() {
 // ── Bus icon con etiqueta de calle ────────────────────────────
 function busIcon(deg) {
   lastBearing = deg;
+  // 🚌 emoji mira a la derecha por defecto (east).
+  // Cuando va hacia la izquierda (bearing 180-360) usamos scaleX(-1) para no invertirlo.
+  const norm = ((deg % 360) + 360) % 360;
+  let transform;
+  if (norm >= 0 && norm < 180) {
+    // Mitad derecha del compás: rotación directa
+    transform = `rotate(${deg - 90}deg)`;
+  } else {
+    // Mitad izquierda: espejo horizontal + rotación complementaria
+    transform = `scaleX(-1) rotate(${270 - deg}deg)`;
+  }
   const label = currentStreet
     ? `<div class="bus-label">📍 ${currentStreet}</div>`
     : '';
   return L.divIcon({
     className: '',
-    html: `<div class="bus-wrapper">${label}<span class="bus-emoji" style="transform:rotate(${deg - 90}deg)">🚌</span></div>`,
+    html: `<div class="bus-wrapper">${label}<span class="bus-emoji" style="transform:${transform}">🚌</span></div>`,
     iconSize: [28, currentStreet ? 50 : 28],
     iconAnchor: [14, currentStreet ? 46 : 24],
   });
@@ -420,7 +432,9 @@ document.querySelectorAll('.sent-btn').forEach(b => {
 });
 
 document.getElementById('speed').addEventListener('input', function() {
-  document.getElementById('speed-label').textContent = '×' + parseFloat(this.value).toFixed(2).replace('.00','');
+  const SPEEDS = [0.1, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5];
+  const v = SPEEDS[parseInt(this.value)];
+  document.getElementById('speed-label').textContent = '×' + v;
 });
 </script>
 </body>
