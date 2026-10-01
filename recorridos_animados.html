@@ -281,13 +281,13 @@ fetch('https://raw.githubusercontent.com/CGAUNA2024/mapa-usos/main/recorridos.js
       const l = e.l, s = e.s;
       if (!RUTAS[l]) RUTAS[l] = {};
       const pts = e.c.map(c => [c[1], c[0]]);   // [lon,lat] → [lat,lon]
-      if (!RUTAS[l][s]) RUTAS[l][s] = pts;
-      else RUTAS[l][s] = RUTAS[l][s].concat(pts);
+      if (!RUTAS[l][s]) RUTAS[l][s] = [pts];    // array de segmentos
+      else RUTAS[l][s].push(pts);
     });
-    // Para Vuelta: si existe, usarla; si no, invertir la Ida
+    // Para Vuelta: si existe, usarla; si no, invertir segmentos de Ida
     Object.keys(RUTAS).forEach(l => {
       if (!RUTAS[l]['Vuelta'] && RUTAS[l]['Ida']) {
-        RUTAS[l]['Vuelta'] = [...RUTAS[l]['Ida']].reverse();
+        RUTAS[l]['Vuelta'] = [...RUTAS[l]['Ida']].reverse().map(seg => [...seg].reverse());
       }
     });
     buildPanel();
@@ -334,8 +334,8 @@ function selectLine(linea) {
 // ── Iniciar animación ─────────────────────────────────────────
 function startAnimation() {
   if (!activeLine) return;
-  const pts = RUTAS[activeLine]?.[activeSentido];
-  if (!pts || pts.length < 2) return;
+  const segs = RUTAS[activeLine]?.[activeSentido];
+  if (!segs || !segs.length) return;
   stopAnimation();
 
   // Resetear nombre de calle
@@ -344,12 +344,15 @@ function startAnimation() {
 
   const color = COLORS[activeLine] || '#fff';
 
-  // Recorrido
+  // Dibujar cada segmento por separado (evita líneas rectas entre segmentos)
   if (animLayer) map.removeLayer(animLayer);
-  animLayer = L.polyline(pts, { color, weight: 5, opacity: 0.88, lineJoin: 'round', lineCap: 'round' }).addTo(map);
-  map.fitBounds(animLayer.getBounds(), { padding: [30, 30] });
+  animLayer = L.layerGroup(
+    segs.map(seg => L.polyline(seg, { color, weight: 5, opacity: 0.88, lineJoin: 'round', lineCap: 'round' }))
+  ).addTo(map);
+  const allPts = segs.flat();
+  map.fitBounds(L.polyline(allPts).getBounds(), { padding: [30, 30] });
 
-  animPts = interpolate(pts, 20);
+  animPts = interpolate(allPts, 20);
   animIdx = 0;
   visitedStops = new Set();
   routeKm = (routeLength(animPts) / 1000).toFixed(1);
