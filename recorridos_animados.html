@@ -221,6 +221,9 @@ let RUTAS = {};
 let PARADAS = {};
 let paradaVisible = false;
 let paradaLayer = null;
+let nextStopMarker = null;
+let visitedStops = new Set();
+let routeKm = 0;
 let activeLine = null, activeSentido = 'Ida';
 let animLayer = null, busMarker = null, animTimer = null;
 let animIdx = 0, animPts = [];
@@ -257,8 +260,14 @@ async function updateStreet(lat, lon) {
 // ── Cargar paradas ────────────────────────────────────────────
 fetch('https://raw.githubusercontent.com/CGAUNA2024/mapa-usos/main/paradas.json')
   .then(r => r.json())
-  .then(data => { PARADAS = data; })
-  .catch(() => {});
+  .then(data => {
+    PARADAS = data;
+    console.log('Paradas cargadas. Claves:', Object.keys(PARADAS).length);
+  })
+  .catch(e => {
+    console.error('ERROR cargando paradas.json:', e);
+    document.getElementById('info-bar').textContent = 'ERROR: no se pudo cargar paradas.json';
+  });
 
 // ── Cargar recorridos ─────────────────────────────────────────
 fetch('https://raw.githubusercontent.com/CGAUNA2024/mapa-usos/main/recorridos.json')
@@ -338,6 +347,9 @@ function startAnimation() {
 
   animPts = interpolate(pts, 20);
   animIdx = 0;
+  visitedStops = new Set();
+  routeKm = (routeLength(animPts) / 1000).toFixed(1);
+  if (nextStopMarker) { map.removeLayer(nextStopMarker); nextStopMarker = null; }
 
   if (busMarker) map.removeLayer(busMarker);
   busMarker = L.marker(animPts[0], { icon: busIcon(0), zIndexOffset: 1000 }).addTo(map);
@@ -373,6 +385,7 @@ function runStep() {
   busMarker.setIcon(busIcon(brg));
 
   updateStreet(b[0], b[1]);  // async, no bloquea
+  updateNextStop(b[0], b[1]);
 
   animIdx++;
   animTimer = setTimeout(runStep, delay);
@@ -440,6 +453,63 @@ function routeLength(pts) {
   let d = 0;
   for (let i = 0; i < pts.length-1; i++) d += L.latLng(pts[i]).distanceTo(L.latLng(pts[i+1]));
   return d;
+}
+
+// ── Próxima parada ────────────────────────────────────────────
+function updateNextStop(lat, lon) {
+  try {
+    const key = `${activeLine}_${activeSentido}`;
+    const stops = PARADAS[key];
+    if (!stops || !stops.length) {
+      // Si PARADAS tiene claves pero no esta, log útil
+      if (Object.keys(PARADAS).length > 0) {
+        console.warn('Sin paradas para clave:', key, '— claves disponibles:', Object.keys(PARADAS).slice(0,5));
+      }
+      return;
+    }
+
+    // Marcar como visitada si el bus pasó a menos de 55m
+    stops.forEach((p, i) => {
+      if (!visitedStops.has(i)) {
+        const d = L.latLng(lat, lon).distanceTo(L.latLng(p.lat, p.lon));
+        if (d < 55) visitedStops.add(i);
+      }
+    });
+
+    // Encontrar la más cercana no visitada
+    let minDist = Infinity, nearest = null;
+    stops.forEach((p, i) => {
+      if (visitedStops.has(i)) return;
+      const d = L.latLng(lat, lon).distanceTo(L.latLng(p.lat, p.lon));
+      if (d < minDist) { minDist = d; nearest = p; }
+    });
+
+    if (!nearest) {
+      if (nextStopMarker) { map.removeLayer(nextStopMarker); nextStopMarker = null; }
+      document.getElementById('info-bar').innerHTML =
+        `<span>${activeLine} ${activeSentido}</span> &nbsp;|&nbsp; ${routeKm} km &nbsp;·&nbsp; 🏁 Fin de recorrido`;
+      return;
+    }
+
+    // Info bar
+    document.getElementById('info-bar').innerHTML =
+      `<span>${activeLine} ${activeSentido}</span> &nbsp;|&nbsp; ${routeKm} km &nbsp;·&nbsp; ` +
+      `🚏 Próxima: <b>${nearest.d}</b> <span style="color:#64748b">(${Math.round(minDist)} m)</span>`;
+
+    // Marcador amarillo pulsante
+    if (!nextStopMarker) {
+      nextStopMarker = L.circleMarker([nearest.lat, nearest.lon], {
+        radius: 9, color: '#fff', weight: 2.5,
+        fillColor: '#facc15', fillOpacity: 1,
+      }).addTo(map);
+    } else {
+      nextStopMarker.setLatLng([nearest.lat, nearest.lon]);
+    }
+    nextStopMarker.unbindTooltip();
+    nextStopMarker.bindTooltip(`<b>🚏 ${nearest.d}</b>`, { direction: 'top', offset: [0, -12], permanent: false });
+  } catch(e) {
+    console.error('updateNextStop error:', e);
+  }
 }
 
 // ── Paradas ───────────────────────────────────────────────────
