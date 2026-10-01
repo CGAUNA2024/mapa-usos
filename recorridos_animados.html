@@ -187,22 +187,22 @@
 <script>
 // ── Colores ────────────────────────────────────────────────────
 const COLORS = {
-  '102A':'#FF6B6B','102B':'#FF9F43','102C':'#FECA57',
-  '103A':'#48DBFB','103B':'#FF9FF3','103C CALESITA':'#54A0FF','103C DIRECTO':'#00A8FF',
-  '104A':'#9B59B6','104B':'#00D2D3','104C':'#1DD1A1','104D':'#BDC3C7',
-  '105A':'#FD9644','105AT':'#A29BFE','105B':'#6C5CE7','105C':'#FDCB6E',
-  '105C PERICHON':'#E17055','105C YECOHA':'#00B894',
-  '106A':'#E17055','106B':'#74B9FF','106C':'#55EFC4',
-  '108A':'#0984E3','108C':'#D63031',
-  '109A':'#6AB04C','109B':'#F9CA24',
-  'RIACHUELO':'#22A6B3',
-  '904A':'#8E44AD','904B':'#E67E22','904C':'#16A085',
-  'SANTA ANA':'#C0392B',
-  'DOCENTE':'#7F8C8D','SANTA CATALINA':'#F39C12',
-  '250VIV':'#D35400','101C PONCE':'#2980B9',
-  '101B':'#E84393','101C':'#F368E0',
-  '110A':'#00CEC9','110B':'#FDCB6E','110C':'#6C5CE7',
-  '110 S.CAYETANO':'#00B894','110 U.PENAL':'#636E72','110 RIACHUELO':'#0097A7',
+  '102A':'#E53935','102B':'#E65100','102C':'#F9A825',
+  '103A':'#0288D1','103B':'#AD1457','103C CALESITA':'#1565C0','103C DIRECTO':'#0097A7',
+  '104A':'#6A1599','104B':'#00838F','104C':'#00796B','104D':'#546E7A',
+  '105A':'#BF360C','105AT':'#4527A0','105B':'#283593','105C':'#F57F17',
+  '105C PERICHON':'#B71C1C','105C YECOHA':'#1B5E20',
+  '106A':'#C62828','106B':'#1565C0','106C':'#00695C',
+  '108A':'#0D47A1','108C':'#B71C1C',
+  '109A':'#2E7D32','109B':'#F57F17',
+  'RIACHUELO':'#00838F',
+  '904A':'#4A148C','904B':'#E65100','904C':'#004D40',
+  'SANTA ANA':'#B71C1C',
+  'DOCENTE':'#37474F','SANTA CATALINA':'#E65100',
+  '250VIV':'#BF360C','101C PONCE':'#1565C0',
+  '101B':'#880E4F','101C':'#6A1599',
+  '110A':'#006064','110B':'#E65100','110C':'#311B92',
+  '110 S.CAYETANO':'#1B5E20','110 U.PENAL':'#263238','110 RIACHUELO':'#01579B',
 };
 
 // ── Descripciones Ida (Vuelta se genera automáticamente invirtiendo) ──
@@ -233,8 +233,8 @@ const DESC_IDA = {
   '109B':          'Terminal - Yecohá',
   'RIACHUELO':     'Riachuelo - Puerto',
   '904A':          'Campus Ctes. - Terminal Rcia.',
-  '904B':          'UNNE - Puerto x Sarmiento',
-  '904C':          'UNNE - Puerto x Barranqueras',
+  '904B':          'UNNE x Resistencia - Puerto',
+  '904C':          'UNNE x Barranqueras - Puerto',
   'SANTA ANA':     'Santa Ana - Terminal',
   'DOCENTE':       'Docente - Puerto',
   '250VIV':        'B° 250 Viv. - Puerto',
@@ -458,7 +458,7 @@ function startAnimation() {
   // Dibujar cada segmento por separado (evita líneas rectas entre segmentos)
   if (animLayer) map.removeLayer(animLayer);
   animLayer = L.layerGroup(
-    segs.map(seg => L.polyline(seg, { color, weight: 5, opacity: 0.88, lineJoin: 'round', lineCap: 'round' }))
+    segs.map(seg => L.polyline(seg, { color, weight: 6, opacity: 1.0, lineJoin: 'round', lineCap: 'round' }))
   ).addTo(map);
   const allPts = segs.flat();
   map.fitBounds(L.polyline(allPts).getBounds(), { padding: [30, 30] });
