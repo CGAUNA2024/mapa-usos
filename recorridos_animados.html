@@ -84,10 +84,26 @@
     border-radius: 5px; font-size: 12px; cursor: pointer; transition: all .15s;
   }
   .sent-btn.active { background: #e94560; border-color: #e94560; color: #fff; font-weight: bold; }
-  #lines-list { overflow-y: auto; flex: 1; padding: 8px; display: flex; flex-direction: column; gap: 5px; }
+  #lines-list { overflow-y: auto; flex: 1; padding: 6px 6px 8px; display: flex; flex-direction: column; gap: 3px; }
+
+  /* ── Grupos ── */
+  .group-header {
+    width: 100%; padding: 7px 10px;
+    border-radius: 6px; border: none;
+    font-size: 11px; font-weight: bold; letter-spacing: .5px; text-transform: uppercase;
+    cursor: pointer; text-align: left;
+    display: flex; align-items: center; justify-content: space-between;
+    transition: opacity .15s;
+  }
+  .group-header:hover { opacity: .85; }
+  .group-header .caret { font-size: 9px; transition: transform .2s; }
+  .group-header.open .caret { transform: rotate(90deg); }
+  .group-lines { display: none; flex-direction: column; gap: 3px; padding: 3px 0 3px 8px; }
+  .group-lines.open { display: flex; }
+
   .line-btn {
-    width: 100%; padding: 8px 12px;
-    border-radius: 7px; border: 2px solid transparent;
+    width: 100%; padding: 7px 10px;
+    border-radius: 6px; border: 2px solid transparent;
     background: #0f172a; color: #e2e8f0;
     font-size: 13px; font-weight: bold;
     cursor: pointer; text-align: left; transition: all .15s;
@@ -179,12 +195,11 @@ const COLORS = {
   'RIACHUELO':'#22A6B3',
   '904A':'#8E44AD','904B':'#E67E22','904C':'#16A085',
   'SANTA ANA':'#C0392B',
-  'DOCENTE':'#7F8C8D','VALENCIA':'#2ECC71','SANTA CATALINA':'#F39C12',
-  'SAN CAYETANO':'#1ABC9C','UNIDAD PENAL':'#95A5A6',
-  '250VIV':'#D35400','PONCE-RIO':'#2980B9',
+  'DOCENTE':'#7F8C8D','SANTA CATALINA':'#F39C12',
+  '250VIV':'#D35400','101C PONCE':'#2980B9',
   '101B':'#E84393','101C':'#F368E0',
   '110A':'#00CEC9','110B':'#FDCB6E','110C':'#6C5CE7',
-  '110 SAN CAYETANO':'#00B894','110 UNIDAD PENAL':'#636E72','110 RIACHUELO':'#0097A7',
+  '110 S.CAYETANO':'#00B894','110 U.PENAL':'#636E72','110 RIACHUELO':'#0097A7',
 };
 
 // ── Descripciones Ida (Vuelta se genera automáticamente invirtiendo) ──
@@ -218,19 +233,15 @@ const DESC_IDA = {
   '904C':          'UNNE - Puerto x Barranqueras',
   'SANTA ANA':     'Santa Ana - Terminal',
   'DOCENTE':       'Docente - Puerto',
-  'VALENCIA':      'Valencia - Puerto',
-  'SANTA CATALINA':'Santa Catalina - Puerto',
-  'SAN CAYETANO':  'Centro - San Cayetano/Granja',
-  'UNIDAD PENAL':  'Centro - Unidad Penal/San Cayetano',
   '250VIV':        'B° 250 Viv. - Puerto',
-  'PONCE-RIO':     'Ponce - Riachuelo',
+  '101C PONCE':    'Ponce - Riachuelo',
   '101B':          'Ponce - Puerto',
   '101C':          'Ponce - Riachuelo - Puerto',
   '110A':          'B° Molina Punta - Cementerio',
   '110B':          'Cementerio - B° 17 de Agosto',
   '110C':          'Santa Catalina - Puerto',
-  '110 SAN CAYETANO': 'Centro - San Cayetano/Granja',
-  '110 UNIDAD PENAL': 'Centro - Unidad Penal/San Cayetano',
+  '110 S.CAYETANO': 'Centro - San Cayetano/Granja',
+  '110 U.PENAL':   'Centro - Unidad Penal/San Cayetano',
   '110 RIACHUELO': 'Riachuelo - Centro',
 };
 
@@ -327,19 +338,83 @@ fetch('https://raw.githubusercontent.com/CGAUNA2024/mapa-usos/main/recorridos.js
       '<div style="color:#e94560;font-size:12px;padding:16px">Error cargando recorridos.<br>Verificá la conexión.</div>';
   });
 
+// ── Grupos de líneas ──────────────────────────────────────────
+const GRUPOS = [
+  {
+    nombre: 'Líneas Urbanas ERSA',
+    color: '#e94560',
+    lineas: ['102A','102B','102C','103A','103B','103C',
+             '104A','104B','104C','104D',
+             '105A','105AT','105B','105C','105C PERICHON','105C YECOHA',
+             '106A','106B','106C',
+             '108A','108C',
+             '109A','109B',
+             'DOCENTE','250VIV']
+  },
+  {
+    nombre: 'Líneas Interurbanas ERSA',
+    color: '#8E44AD',
+    lineas: ['RIACHUELO','SANTA ANA']
+  },
+  {
+    nombre: 'Líneas Urbanas MIRAMAR',
+    color: '#F39C12',
+    lineas: ['101B','101C','101C PONCE',
+             '110A','110B','110C',
+             '110 S.CAYETANO','110 U.PENAL','110 RIACHUELO']
+  },
+  {
+    nombre: 'Línea Interprovincial 904',
+    color: '#16A085',
+    lineas: ['904A','904B','904C']
+  },
+];
+
 // ── Panel de líneas ───────────────────────────────────────────
 function buildPanel() {
   const list = document.getElementById('lines-list');
   list.innerHTML = '';
-  Object.keys(RUTAS).sort().forEach(linea => {
-    const color = COLORS[linea] || '#94a3b8';
-    const btn = document.createElement('button');
-    btn.className = 'line-btn';
-    btn.dataset.linea = linea;
-    btn.style.borderColor = color + '55';
-    btn.innerHTML = `<span class="line-dot" style="background:${color}"></span>${linea}`;
-    btn.addEventListener('click', () => selectLine(linea));
-    list.appendChild(btn);
+
+  // Líneas que no caen en ningún grupo → grupo "Otras"
+  const todasEnGrupo = new Set(GRUPOS.flatMap(g => g.lineas));
+  const otras = Object.keys(RUTAS).filter(l => !todasEnGrupo.has(l)).sort();
+
+  const gruposRender = [...GRUPOS];
+  if (otras.length) gruposRender.push({ nombre: 'Otras', color: '#64748b', lineas: otras });
+
+  gruposRender.forEach((grupo, gi) => {
+    // Solo mostrar grupos que tengan al menos 1 línea cargada
+    const lineasPresentes = grupo.lineas.filter(l => RUTAS[l]);
+    if (!lineasPresentes.length) return;
+
+    // Cabecera del grupo
+    const hdr = document.createElement('button');
+    hdr.className = 'group-header' + (gi === 0 ? ' open' : '');
+    hdr.style.background = grupo.color + '22';
+    hdr.style.color = grupo.color;
+    hdr.innerHTML = `<span>${grupo.nombre}</span><span class="caret">▶</span>`;
+    list.appendChild(hdr);
+
+    // Contenedor de líneas
+    const grpDiv = document.createElement('div');
+    grpDiv.className = 'group-lines' + (gi === 0 ? ' open' : '');
+    list.appendChild(grpDiv);
+
+    hdr.addEventListener('click', () => {
+      hdr.classList.toggle('open');
+      grpDiv.classList.toggle('open');
+    });
+
+    lineasPresentes.forEach(linea => {
+      const color = COLORS[linea] || '#94a3b8';
+      const btn = document.createElement('button');
+      btn.className = 'line-btn';
+      btn.dataset.linea = linea;
+      btn.style.borderColor = color + '55';
+      btn.innerHTML = `<span class="line-dot" style="background:${color}"></span>${linea}`;
+      btn.addEventListener('click', () => selectLine(linea));
+      grpDiv.appendChild(btn);
+    });
   });
 }
 
