@@ -41,6 +41,12 @@
   #speed-wrap { margin-left: auto; display: flex; align-items: center; gap: 8px; font-size: 12px; color: #94a3b8; white-space: nowrap; }
   #speed-wrap input { width: 80px; accent-color: #e94560; }
   #speed-label { color: #e2e8f0; font-weight: bold; min-width: 30px; }
+  #btn-paradas {
+    padding: 5px 12px; border-radius: 6px; border: 1px solid #475569;
+    background: #1e293b; color: #94a3b8; font-size: 12px; cursor: pointer;
+    transition: all .15s; white-space: nowrap;
+  }
+  #btn-paradas.active { background: #0ea5e9; border-color: #0ea5e9; color: #fff; font-weight: bold; }
 
   /* ── Main layout ── */
   #main { display: flex; flex: 1; overflow: hidden; }
@@ -131,6 +137,7 @@
   <div id="logo-ersa"><img src="logo_ersa.png" onerror="this.style.display='none'"></div>
   <h1>🗺 Recorridos<span class="sub">Líneas Urbanas CORRIENTES</span></h1>
   <div id="route-title"></div>
+  <button id="btn-paradas" title="Mostrar/ocultar paradas">🚏 Paradas</button>
   <div id="speed-wrap">
     <span>Velocidad:</span>
     <input type="range" id="speed" min="0" max="6" step="1" value="2">
@@ -211,6 +218,9 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 
 // ── Estado ────────────────────────────────────────────────────
 let RUTAS = {};
+let PARADAS = {};
+let paradaVisible = false;
+let paradaLayer = null;
 let activeLine = null, activeSentido = 'Ida';
 let animLayer = null, busMarker = null, animTimer = null;
 let animIdx = 0, animPts = [];
@@ -243,6 +253,12 @@ async function updateStreet(lat, lon) {
     }
   } catch(e) {}
 }
+
+// ── Cargar paradas ────────────────────────────────────────────
+fetch('https://raw.githubusercontent.com/CGAUNA2024/mapa-usos/main/paradas.json')
+  .then(r => r.json())
+  .then(data => { PARADAS = data; })
+  .catch(() => {});
 
 // ── Cargar recorridos ─────────────────────────────────────────
 fetch('https://raw.githubusercontent.com/CGAUNA2024/mapa-usos/main/recorridos.json')
@@ -337,6 +353,7 @@ function startAnimation() {
   document.getElementById('info-bar').innerHTML =
     `<span>${activeLine} ${activeSentido}</span> &nbsp;|&nbsp; ${km} km de recorrido`;
 
+  dibujarParadas();
   runStep();
 }
 
@@ -420,6 +437,32 @@ function routeLength(pts) {
   for (let i = 0; i < pts.length-1; i++) d += L.latLng(pts[i]).distanceTo(L.latLng(pts[i+1]));
   return d;
 }
+
+// ── Paradas ───────────────────────────────────────────────────
+function dibujarParadas() {
+  if (paradaLayer) { map.removeLayer(paradaLayer); paradaLayer = null; }
+  if (!paradaVisible || !activeLine) return;
+  const key = `${activeLine}_${activeSentido}`;
+  const pts = PARADAS[key];
+  if (!pts || !pts.length) return;
+  const color = COLORS[activeLine] || '#0ea5e9';
+  paradaLayer = L.layerGroup();
+  pts.forEach(p => {
+    L.circleMarker([p.lat, p.lon], {
+      radius: 5, color: '#fff', weight: 1.5,
+      fillColor: color, fillOpacity: 0.9,
+    })
+    .bindTooltip(`<b>${p.id}</b><br>${p.d}`, { direction: 'top', offset: [0, -6] })
+    .addTo(paradaLayer);
+  });
+  paradaLayer.addTo(map);
+}
+
+document.getElementById('btn-paradas').addEventListener('click', function() {
+  paradaVisible = !paradaVisible;
+  this.classList.toggle('active', paradaVisible);
+  dibujarParadas();
+});
 
 // ── Eventos ───────────────────────────────────────────────────
 document.querySelectorAll('.sent-btn').forEach(b => {
