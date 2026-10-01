@@ -172,6 +172,7 @@ const COLORS = {
   '103A':'#48DBFB','103B':'#FF9FF3','103C':'#54A0FF',
   '104A':'#9B59B6','104B':'#00D2D3','104C':'#1DD1A1','104D':'#BDC3C7',
   '105A':'#FD9644','105AT':'#A29BFE','105B':'#6C5CE7','105C':'#FDCB6E',
+  '105C PERICHON':'#E17055','105C YECOHA':'#00B894',
   '106A':'#E17055','106B':'#74B9FF','106C':'#55EFC4',
   '108A':'#0984E3','108C':'#D63031',
   '109A':'#6AB04C','109B':'#F9CA24',
@@ -181,6 +182,9 @@ const COLORS = {
   'DOCENTE':'#7F8C8D','VALENCIA':'#2ECC71','SANTA CATALINA':'#F39C12',
   'SAN CAYETANO':'#1ABC9C','UNIDAD PENAL':'#95A5A6',
   '250VIV':'#D35400','PONCE-RIO':'#2980B9',
+  '101B':'#E84393','101C':'#F368E0',
+  '110A':'#00CEC9','110B':'#FDCB6E','110C':'#6C5CE7',
+  '110 SAN CAYETANO':'#00B894','110 UNIDAD PENAL':'#636E72','110 RIACHUELO':'#0097A7',
 };
 
 // ── Descripciones Ida (Vuelta se genera automáticamente invirtiendo) ──
@@ -196,9 +200,11 @@ const DESC_IDA = {
   '104C':          'B° Pujol - B° Río Paraná',
   '104D':          'B° 1000 Viv. - Morgue',
   '105A':          'B° Molina Punta - Puerto',
-  '105AT':         'Molina - Punta Taitalo',
-  '105B':          'Yecohá - Puerto',
-  '105C':          'Perichon - Puerto',
+  '105AT':         'Molina Punta - Punta Taitalo',
+  '105B':          'B° Docente - Puerto',
+  '105C':          'B° 250 Viv. - Puerto',
+  '105C PERICHON': 'Perichon - Puerto',
+  '105C YECOHA':   'Yecohá - Puerto',
   '106A':          'B° Pirayuí - Puerto',
   '106B':          'B° Nuevo - Puerto',
   '106C':          'B° 500 Viv. - Puerto',
@@ -218,6 +224,14 @@ const DESC_IDA = {
   'UNIDAD PENAL':  'Centro - Unidad Penal/San Cayetano',
   '250VIV':        'B° 250 Viv. - Puerto',
   'PONCE-RIO':     'Ponce - Riachuelo',
+  '101B':          'Ponce - Puerto',
+  '101C':          'Ponce - Riachuelo - Puerto',
+  '110A':          'B° Molina Punta - Cementerio',
+  '110B':          'Cementerio - B° 17 de Agosto',
+  '110C':          'Santa Catalina - Puerto',
+  '110 SAN CAYETANO': 'Centro - San Cayetano/Granja',
+  '110 UNIDAD PENAL': 'Centro - Unidad Penal/San Cayetano',
+  '110 RIACHUELO': 'Riachuelo - Centro',
 };
 
 function getDesc(linea, sentido) {
