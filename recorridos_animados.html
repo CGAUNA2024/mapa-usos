@@ -194,6 +194,12 @@
     color: #0284c7;
     font-size: 13px;
   }
+  .sl-street.sl-milestone {
+    font-size: 11px;
+    font-weight: 700;
+    color: #475569;
+    letter-spacing: .4px;
+  }
   .sl-arrow {
     font-size: 10px;
     color: #94a3b8;
@@ -340,28 +346,45 @@ let lastGeocodePos = null;
 let lastGeocodeTime = 0;
 let callesLog = [];   // historial de calles recorridas
 
-function renderStreetLog() {
+function renderStreetLog(finished = false) {
   const log = document.getElementById('street-log');
   const body = document.getElementById('street-log-body');
   if (!callesLog.length) { log.style.display = 'none'; return; }
   log.style.display = 'block';
   body.innerHTML = '';
+
+  // INICIO
+  const inicio = document.createElement('div');
+  inicio.className = 'sl-street sl-milestone';
+  inicio.textContent = '🚦 INICIO RECORRIDO';
+  body.appendChild(inicio);
+  const arrInicio = document.createElement('div');
+  arrInicio.className = 'sl-arrow';
+  arrInicio.textContent = '↓';
+  body.appendChild(arrInicio);
+
+  // Calles
   callesLog.forEach((calle, i) => {
-    const row = document.createElement('div');
-    row.className = 'sl-row';
     const span = document.createElement('div');
-    span.className = 'sl-street' + (i === callesLog.length - 1 ? ' current' : '');
+    span.className = 'sl-street' + (!finished && i === callesLog.length - 1 ? ' current' : '');
     span.textContent = calle;
-    row.appendChild(span);
-    if (i < callesLog.length - 1) {
+    body.appendChild(span);
+    if (i < callesLog.length - 1 || finished) {
       const arr = document.createElement('div');
       arr.className = 'sl-arrow';
       arr.textContent = '↓';
-      row.appendChild(arr);
+      body.appendChild(arr);
     }
-    body.appendChild(row);
   });
-  // Auto-scroll al final
+
+  // FIN (solo cuando termina)
+  if (finished) {
+    const fin = document.createElement('div');
+    fin.className = 'sl-street sl-milestone';
+    fin.textContent = '🏁 FIN RECORRIDO';
+    body.appendChild(fin);
+  }
+
   log.scrollTop = log.scrollHeight;
 }
 
@@ -577,6 +600,7 @@ function startAnimation() {
 
 function runStep() {
   if (animIdx >= animPts.length - 1) {
+    renderStreetLog(true);   // mostrar FIN RECORRIDO
     setTimeout(() => { animIdx = 0; runStep(); }, 1500);
     return;
   }
