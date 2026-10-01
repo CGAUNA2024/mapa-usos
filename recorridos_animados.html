@@ -125,6 +125,10 @@
     pointer-events: none; display: block;
   }
 
+  /* ── Tooltip próxima parada ── */
+  .tooltip-parada { background: #facc15 !important; color: #0f172a !important; border: none !important; font-weight: bold; box-shadow: 0 2px 6px rgba(0,0,0,.4); }
+  .tooltip-parada::before { border-top-color: #facc15 !important; }
+
   /* ── Scrollbar ── */
   #lines-list::-webkit-scrollbar { width: 5px; }
   #lines-list::-webkit-scrollbar-track { background: #0f172a; }
@@ -460,7 +464,6 @@ function updateNextStop(lat, lon) {
   try {
     const key = `${activeLine}_${activeSentido}`;
     const stops = PARADAS[key];
-    if (animIdx === 1) console.log('updateNextStop — key:', key, '| stops:', stops ? stops.length : 'NONE', '| PARADAS keys:', Object.keys(PARADAS).length);
     if (!stops || !stops.length) {
       if (Object.keys(PARADAS).length > 0) {
         console.warn('Sin paradas para clave:', key, '— claves disponibles:', Object.keys(PARADAS).slice(0,5));
@@ -506,7 +509,10 @@ function updateNextStop(lat, lon) {
       nextStopMarker.setLatLng([nearest.lat, nearest.lon]);
     }
     nextStopMarker.unbindTooltip();
-    nextStopMarker.bindTooltip(`<b>🚏 ${nearest.d}</b>`, { direction: 'top', offset: [0, -12], permanent: false });
+    nextStopMarker.bindTooltip(`<b>🚏 ${nearest.d}</b>`, {
+      direction: 'top', offset: [0, -12], permanent: false,
+      className: 'tooltip-parada',
+    });
   } catch(e) {
     console.error('updateNextStop error:', e);
   }
@@ -526,7 +532,7 @@ function dibujarParadas() {
       radius: 5, color: '#fff', weight: 1.5,
       fillColor: color, fillOpacity: 0.9,
     })
-    .bindTooltip(`<b>${p.id}</b><br>${p.d}`, { direction: 'top', offset: [0, -6] })
+    .bindTooltip(p.d, { direction: 'top', offset: [0, -6] })
     .addTo(paradaLayer);
   });
   paradaLayer.addTo(map);
