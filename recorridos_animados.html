@@ -415,7 +415,7 @@ function buildPanel() {
       btn.className = 'line-btn';
       btn.dataset.linea = linea;
       btn.style.borderColor = color + '55';
-      const origen = DESC_IDA[linea] ? DESC_IDA[linea].split(' - ')[0] : '';
+      const origen = DESC_IDA[linea] || '';
       btn.innerHTML = `<span class="line-dot" style="background:${color}"></span>`
         + `<span class="line-label"><span class="ln">${linea}</span>${origen ? `<span class="lo">${origen}</span>` : ''}</span>`;
       btn.addEventListener('click', () => selectLine(linea));
