@@ -460,8 +460,8 @@ function updateNextStop(lat, lon) {
   try {
     const key = `${activeLine}_${activeSentido}`;
     const stops = PARADAS[key];
+    if (animIdx === 1) console.log('updateNextStop — key:', key, '| stops:', stops ? stops.length : 'NONE', '| PARADAS keys:', Object.keys(PARADAS).length);
     if (!stops || !stops.length) {
-      // Si PARADAS tiene claves pero no esta, log útil
       if (Object.keys(PARADAS).length > 0) {
         console.warn('Sin paradas para clave:', key, '— claves disponibles:', Object.keys(PARADAS).slice(0,5));
       }
