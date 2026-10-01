@@ -152,6 +152,57 @@
   #lines-list::-webkit-scrollbar { width: 5px; }
   #lines-list::-webkit-scrollbar-track { background: #0f172a; }
   #lines-list::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+
+  /* ── Panel calles recorridas ── */
+  #street-log {
+    display: none;
+    position: absolute;
+    top: 12px; left: 12px;
+    z-index: 1000;
+    background: rgba(255,255,255,0.95);
+    border-radius: 10px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.25);
+    padding: 8px 10px;
+    min-width: 170px;
+    max-width: 220px;
+    max-height: 280px;
+    overflow-y: auto;
+    font-family: 'Segoe UI', Arial, sans-serif;
+  }
+  #street-log-title {
+    font-size: 10px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: .8px;
+    color: #64748b;
+    margin-bottom: 6px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  .sl-row {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .sl-street {
+    font-size: 12px;
+    font-weight: 600;
+    color: #1e293b;
+    padding: 2px 0;
+  }
+  .sl-street.current {
+    color: #0284c7;
+    font-size: 13px;
+  }
+  .sl-arrow {
+    font-size: 10px;
+    color: #94a3b8;
+    line-height: 1;
+    padding: 1px 4px;
+  }
+  #street-log::-webkit-scrollbar { width: 4px; }
+  #street-log::-webkit-scrollbar-track { background: #f1f5f9; }
+  #street-log::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 2px; }
 </style>
 </head>
 <body>
@@ -169,7 +220,12 @@
 </div>
 
 <div id="main">
-  <div id="map"></div>
+  <div id="map">
+    <div id="street-log">
+      <div id="street-log-title">🗺 Calles recorridas</div>
+      <div id="street-log-body"></div>
+    </div>
+  </div>
   <div id="panel">
     <div id="panel-title">Líneas</div>
     <div id="sentido-bar">
@@ -282,6 +338,32 @@ let lastBearing = 0;
 let currentStreet = '';
 let lastGeocodePos = null;
 let lastGeocodeTime = 0;
+let callesLog = [];   // historial de calles recorridas
+
+function renderStreetLog() {
+  const log = document.getElementById('street-log');
+  const body = document.getElementById('street-log-body');
+  if (!callesLog.length) { log.style.display = 'none'; return; }
+  log.style.display = 'block';
+  body.innerHTML = '';
+  callesLog.forEach((calle, i) => {
+    const row = document.createElement('div');
+    row.className = 'sl-row';
+    const span = document.createElement('div');
+    span.className = 'sl-street' + (i === callesLog.length - 1 ? ' current' : '');
+    span.textContent = calle;
+    row.appendChild(span);
+    if (i < callesLog.length - 1) {
+      const arr = document.createElement('div');
+      arr.className = 'sl-arrow';
+      arr.textContent = '↓';
+      row.appendChild(arr);
+    }
+    body.appendChild(row);
+  });
+  // Auto-scroll al final
+  log.scrollTop = log.scrollHeight;
+}
 
 async function updateStreet(lat, lon) {
   const now = Date.now();
@@ -299,8 +381,12 @@ async function updateStreet(lat, lon) {
     );
     const data = await r.json();
     const road = data.address?.road || data.address?.pedestrian || data.address?.path || '';
-    if (road !== currentStreet) {
+    if (road && road !== currentStreet) {
       currentStreet = road;
+      if (!callesLog.length || callesLog[callesLog.length - 1] !== road) {
+        callesLog.push(road);
+        renderStreetLog();
+      }
       if (busMarker) busMarker.setIcon(busIcon(lastBearing));
     }
   } catch(e) {}
@@ -449,9 +535,11 @@ function startAnimation() {
   if (!segs || !segs.length) return;
   stopAnimation();
 
-  // Resetear nombre de calle
+  // Resetear nombre de calle y log
   currentStreet = '';
   lastGeocodePos = null;
+  callesLog = [];
+  renderStreetLog();
 
   const color = COLORS[activeLine] || '#fff';
 
