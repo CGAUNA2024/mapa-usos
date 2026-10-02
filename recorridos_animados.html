@@ -745,6 +745,27 @@ function updateNextStop(lat, lon) {
 }
 
 // ── Paradas ───────────────────────────────────────────────────
+function busStopIcon(color) {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="28" viewBox="0 0 22 28">
+    <!-- Pin body -->
+    <path d="M11 0 C5 0 0 5 0 11 C0 19 11 28 11 28 C11 28 22 19 22 11 C22 5 17 0 11 0 Z"
+          fill="${color}" stroke="white" stroke-width="1.5"/>
+    <!-- Bus silhouette (simplificado) -->
+    <rect x="4" y="6" width="14" height="9" rx="2" fill="white"/>
+    <rect x="5" y="7" width="5" height="4" rx="1" fill="${color}"/>
+    <rect x="12" y="7" width="5" height="4" rx="1" fill="${color}"/>
+    <circle cx="7" cy="16" r="1.5" fill="white"/>
+    <circle cx="15" cy="16" r="1.5" fill="white"/>
+  </svg>`;
+  return L.divIcon({
+    className: '',
+    html: svg,
+    iconSize: [22, 28],
+    iconAnchor: [11, 28],
+    tooltipAnchor: [0, -28],
+  });
+}
+
 function dibujarParadas() {
   if (paradaLayer) { map.removeLayer(paradaLayer); paradaLayer = null; }
   if (!paradaVisible || !activeLine) return;
@@ -752,13 +773,11 @@ function dibujarParadas() {
   const pts = PARADAS[key];
   if (!pts || !pts.length) return;
   const color = COLORS[activeLine] || '#0ea5e9';
+  const icon = busStopIcon(color);
   paradaLayer = L.layerGroup();
   pts.forEach(p => {
-    L.circleMarker([p.lat, p.lon], {
-      radius: 5, color: '#fff', weight: 1.5,
-      fillColor: color, fillOpacity: 0.9,
-    })
-    .bindTooltip(p.d, { direction: 'top', offset: [0, -6] })
+    L.marker([p.lat, p.lon], { icon })
+    .bindTooltip(p.d, { direction: 'top', offset: [0, -4] })
     .addTo(paradaLayer);
   });
   paradaLayer.addTo(map);
