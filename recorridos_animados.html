@@ -84,6 +84,7 @@
     border-radius: 5px; font-size: 12px; cursor: pointer; transition: all .15s;
   }
   .sent-btn.active { background: #e94560; border-color: #e94560; color: #fff; font-weight: bold; }
+  .sent-btn.ambas.active { background: #7c3aed; border-color: #7c3aed; }
   #lines-list { overflow-y: auto; flex: 1; padding: 6px 6px 8px; display: flex; flex-direction: column; gap: 3px; }
 
   /* ── Grupos ── */
@@ -237,6 +238,7 @@
     <div id="sentido-bar">
       <button class="sent-btn active" data-s="Ida">▶ Ida</button>
       <button class="sent-btn" data-s="Vuelta">◀ Vuelta</button>
+      <button class="sent-btn ambas" id="btn-ambas">↔ Ambas</button>
     </div>
     <div id="lines-list">
       <div style="color:#475569;font-size:12px;text-align:center;padding:20px">Cargando recorridos...</div>
@@ -336,7 +338,8 @@ let nextStopMarker = null;
 let visitedStops = new Set();
 let routeKm = 0;
 let activeLine = null, activeSentido = 'Ida';
-let animLayer = null, vueltaLayer = null, busMarker = null, animTimer = null;
+let animLayer = null, busMarker = null, animTimer = null;
+let modoAmbas = false;
 let animIdx = 0, animPts = [];
 let lastBearing = 0;
 
@@ -566,20 +569,7 @@ function startAnimation() {
 
   const color = COLORS[activeLine] || '#fff';
 
-  // Dibujar Vuelta de fondo (punteada, semitransparente)
-  if (vueltaLayer) { map.removeLayer(vueltaLayer); vueltaLayer = null; }
-  const otroSentido = activeSentido === 'Ida' ? 'Vuelta' : 'Ida';
-  const segsOtro = RUTAS[activeLine]?.[otroSentido];
-  if (segsOtro && segsOtro.length) {
-    vueltaLayer = L.layerGroup(
-      segsOtro.map(seg => L.polyline(seg, {
-        color, weight: 3, opacity: 0.35,
-        dashArray: '8 6', lineJoin: 'round', lineCap: 'round'
-      }))
-    ).addTo(map);
-  }
-
-  // Dibujar Ida (sólida, animada)
+  // Dibujar cada segmento por separado (evita líneas rectas entre segmentos)
   if (animLayer) map.removeLayer(animLayer);
   animLayer = L.layerGroup(
     segs.map(seg => L.polyline(seg, { color, weight: 6, opacity: 1.0, lineJoin: 'round', lineCap: 'round' }))
@@ -636,7 +626,6 @@ function runStep() {
 
 function stopAnimation() {
   if (animTimer) { clearTimeout(animTimer); animTimer = null; }
-  if (vueltaLayer) { map.removeLayer(vueltaLayer); vueltaLayer = null; }
 }
 
 // ── Bus icon con etiqueta de calle ────────────────────────────
@@ -804,14 +793,61 @@ document.getElementById('btn-paradas').addEventListener('click', function() {
 });
 
 // ── Eventos ───────────────────────────────────────────────────
-document.querySelectorAll('.sent-btn').forEach(b => {
+document.querySelectorAll('.sent-btn:not(.ambas)').forEach(b => {
   b.addEventListener('click', () => {
+    modoAmbas = false;
     activeSentido = b.dataset.s;
     document.querySelectorAll('.sent-btn').forEach(x => x.classList.remove('active'));
     b.classList.add('active');
     startAnimation();
   });
 });
+
+document.getElementById('btn-ambas').addEventListener('click', function() {
+  if (!activeLine) return;
+  modoAmbas = true;
+  document.querySelectorAll('.sent-btn').forEach(x => x.classList.remove('active'));
+  this.classList.add('active');
+  mostrarAmbas();
+});
+
+function mostrarAmbas() {
+  if (!activeLine) return;
+  stopAnimation();
+  callesLog = []; renderStreetLog();
+  currentStreet = ''; lastGeocodePos = null;
+
+  const color = COLORS[activeLine] || '#fff';
+  if (animLayer) { map.removeLayer(animLayer); animLayer = null; }
+  if (busMarker) { map.removeLayer(busMarker); busMarker = null; }
+  if (nextStopMarker) { map.removeLayer(nextStopMarker); nextStopMarker = null; }
+
+  const segsIda    = RUTAS[activeLine]?.['Ida']    || [];
+  const segsVuelta = RUTAS[activeLine]?.['Vuelta'] || [];
+  const allSegs = [];
+
+  // Ida — línea sólida
+  segsIda.forEach(seg => {
+    allSegs.push(L.polyline(seg, { color, weight: 6, opacity: 1.0, lineJoin: 'round', lineCap: 'round' }));
+  });
+  // Vuelta — línea punteada
+  segsVuelta.forEach(seg => {
+    allSegs.push(L.polyline(seg, { color, weight: 4, opacity: 0.6, dashArray: '10 7', lineJoin: 'round', lineCap: 'round' }));
+  });
+
+  animLayer = L.layerGroup(allSegs).addTo(map);
+
+  const todosLosPts = [...segsIda, ...segsVuelta].flat();
+  if (todosLosPts.length) map.fitBounds(L.polyline(todosLosPts).getBounds(), { padding: [30, 30] });
+
+  // Título
+  const desc = getDesc(activeLine, 'Ida');
+  document.getElementById('route-title').innerHTML =
+    `<span>${activeLine} — Ida y Vuelta</span> <span class="rt-desc">${desc}</span>`;
+  document.getElementById('info-bar').textContent = `${activeLine} — trazado completo Ida (━━) y Vuelta (╌╌╌)`;
+
+  dibujarParadas();
+}
 
 document.getElementById('speed').addEventListener('input', function() {
   const SPEEDS = [0.1, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 2.25, 2.5, 2.75, 3.0];
