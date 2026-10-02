@@ -336,7 +336,7 @@ let nextStopMarker = null;
 let visitedStops = new Set();
 let routeKm = 0;
 let activeLine = null, activeSentido = 'Ida';
-let animLayer = null, busMarker = null, animTimer = null;
+let animLayer = null, vueltaLayer = null, busMarker = null, animTimer = null;
 let animIdx = 0, animPts = [];
 let lastBearing = 0;
 
@@ -566,7 +566,20 @@ function startAnimation() {
 
   const color = COLORS[activeLine] || '#fff';
 
-  // Dibujar cada segmento por separado (evita líneas rectas entre segmentos)
+  // Dibujar Vuelta de fondo (punteada, semitransparente)
+  if (vueltaLayer) { map.removeLayer(vueltaLayer); vueltaLayer = null; }
+  const otroSentido = activeSentido === 'Ida' ? 'Vuelta' : 'Ida';
+  const segsOtro = RUTAS[activeLine]?.[otroSentido];
+  if (segsOtro && segsOtro.length) {
+    vueltaLayer = L.layerGroup(
+      segsOtro.map(seg => L.polyline(seg, {
+        color, weight: 3, opacity: 0.35,
+        dashArray: '8 6', lineJoin: 'round', lineCap: 'round'
+      }))
+    ).addTo(map);
+  }
+
+  // Dibujar Ida (sólida, animada)
   if (animLayer) map.removeLayer(animLayer);
   animLayer = L.layerGroup(
     segs.map(seg => L.polyline(seg, { color, weight: 6, opacity: 1.0, lineJoin: 'round', lineCap: 'round' }))
@@ -623,6 +636,7 @@ function runStep() {
 
 function stopAnimation() {
   if (animTimer) { clearTimeout(animTimer); animTimer = null; }
+  if (vueltaLayer) { map.removeLayer(vueltaLayer); vueltaLayer = null; }
 }
 
 // ── Bus icon con etiqueta de calle ────────────────────────────
