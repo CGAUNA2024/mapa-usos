@@ -779,17 +779,32 @@ function busStopIcon(color) {
 function dibujarParadas() {
   if (paradaLayer) { map.removeLayer(paradaLayer); paradaLayer = null; }
   if (!paradaVisible || !activeLine) return;
-  const key = `${activeLine}_${activeSentido}`;
-  const pts = PARADAS[key];
-  if (!pts || !pts.length) return;
-  const color = COLORS[activeLine] || '#0ea5e9';
-  const icon = busStopIcon(color);
   paradaLayer = L.layerGroup();
-  pts.forEach(p => {
-    L.marker([p.lat, p.lon], { icon })
-    .bindTooltip(p.d, { direction: 'top', offset: [0, -4] })
-    .addTo(paradaLayer);
-  });
+
+  if (modoAmbas) {
+    // Ida: color de línea / Vuelta: ámbar
+    [['Ida', COLORS[activeLine] || '#0ea5e9'], ['Vuelta', COLOR_VUELTA]].forEach(([s, color]) => {
+      const pts = PARADAS[`${activeLine}_${s}`];
+      if (!pts || !pts.length) return;
+      const icon = busStopIcon(color);
+      pts.forEach(p => {
+        L.marker([p.lat, p.lon], { icon })
+        .bindTooltip(`<b>${s}</b> · ${p.d}`, { direction: 'top', offset: [0, -4] })
+        .addTo(paradaLayer);
+      });
+    });
+  } else {
+    const pts = PARADAS[`${activeLine}_${activeSentido}`];
+    if (!pts || !pts.length) return;
+    const color = COLORS[activeLine] || '#0ea5e9';
+    const icon = busStopIcon(color);
+    pts.forEach(p => {
+      L.marker([p.lat, p.lon], { icon })
+      .bindTooltip(p.d, { direction: 'top', offset: [0, -4] })
+      .addTo(paradaLayer);
+    });
+  }
+
   paradaLayer.addTo(map);
 }
 
