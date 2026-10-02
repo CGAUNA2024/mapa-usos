@@ -340,6 +340,13 @@ let routeKm = 0;
 let activeLine = null, activeSentido = 'Ida';
 let animLayer = null, busMarker = null, animTimer = null;
 let modoAmbas = false;
+// Ambas: estado independiente para cada bus
+let busMarkerIda = null, busMarkerVuelta = null;
+let animTimerIda = null, animTimerVuelta = null;
+let animIdxIda = 0, animIdxVuelta = 0;
+let animPtsIda = [], animPtsVuelta = [];
+let lastBearingIda = 0, lastBearingVuelta = 0;
+const COLOR_VUELTA = '#f59e0b'; // ámbar para la vuelta en modo Ambas
 let animIdx = 0, animPts = [];
 let lastBearing = 0;
 
@@ -796,6 +803,7 @@ document.getElementById('btn-paradas').addEventListener('click', function() {
 document.querySelectorAll('.sent-btn:not(.ambas)').forEach(b => {
   b.addEventListener('click', () => {
     modoAmbas = false;
+    stopAmbas();
     activeSentido = b.dataset.s;
     document.querySelectorAll('.sent-btn').forEach(x => x.classList.remove('active'));
     b.classList.add('active');
@@ -811,40 +819,122 @@ document.getElementById('btn-ambas').addEventListener('click', function() {
   mostrarAmbas();
 });
 
+// ── Ícono de bus para modo Ambas (con badge de color) ────────
+function busIconAmbas(brg, color, sentidoLabel) {
+  const norm = ((brg % 360) + 360) % 360;
+  const MAX = 72;
+  let transform;
+  if (norm <= 180) {
+    const r = Math.max(-MAX, Math.min(MAX, norm - 90));
+    transform = `rotate(${r}deg)`;
+  } else {
+    const r = Math.max(-MAX, Math.min(MAX, 270 - norm));
+    transform = `scaleX(-1) rotate(${r}deg)`;
+  }
+  return L.divIcon({
+    className: '',
+    html: `<div class="bus-wrapper">
+      <div style="background:${color};color:#fff;font-size:9px;font-weight:bold;
+        border-radius:4px;padding:1px 4px;text-align:center;margin-bottom:2px;
+        box-shadow:0 1px 3px rgba(0,0,0,.4)">${sentidoLabel}</div>
+      <span class="bus-emoji" style="transform:${transform}">🚌</span>
+    </div>`,
+    iconSize: [36, 46], iconAnchor: [18, 44],
+  });
+}
+
+// ── Parar ambas animaciones ───────────────────────────────────
+function stopAmbas() {
+  if (animTimerIda)    { clearTimeout(animTimerIda);    animTimerIda = null; }
+  if (animTimerVuelta) { clearTimeout(animTimerVuelta); animTimerVuelta = null; }
+  if (busMarkerIda)    { map.removeLayer(busMarkerIda);    busMarkerIda = null; }
+  if (busMarkerVuelta) { map.removeLayer(busMarkerVuelta); busMarkerVuelta = null; }
+}
+
+// ── Loop Ida (modo Ambas) ────────────────────────────────────
+function runStepIda() {
+  if (!modoAmbas) return;
+  const SPEEDS = [0.1,0.25,0.5,0.75,1.0,1.25,1.5,1.75,2.0,2.25,2.5,2.75,3.0];
+  const speed = SPEEDS[parseInt(document.getElementById('speed').value)] || 1.0;
+  const delay = Math.max(30, 500 / speed);
+  if (animIdxIda >= animPtsIda.length - 1) {
+    animTimerIda = setTimeout(() => { animIdxIda = 0; runStepIda(); }, 1500);
+    return;
+  }
+  const a = animPtsIda[animIdxIda], b = animPtsIda[animIdxIda + 1];
+  const brg = bearing(a, b);
+  lastBearingIda = brg;
+  busMarkerIda.setLatLng(b);
+  busMarkerIda.setIcon(busIconAmbas(brg, COLORS[activeLine] || '#e94560', '▶ IDA'));
+  animIdxIda++;
+  animTimerIda = setTimeout(runStepIda, delay);
+}
+
+// ── Loop Vuelta (modo Ambas) ─────────────────────────────────
+function runStepVuelta() {
+  if (!modoAmbas) return;
+  const SPEEDS = [0.1,0.25,0.5,0.75,1.0,1.25,1.5,1.75,2.0,2.25,2.5,2.75,3.0];
+  const speed = SPEEDS[parseInt(document.getElementById('speed').value)] || 1.0;
+  const delay = Math.max(30, 500 / speed);
+  if (animIdxVuelta >= animPtsVuelta.length - 1) {
+    animTimerVuelta = setTimeout(() => { animIdxVuelta = 0; runStepVuelta(); }, 1500);
+    return;
+  }
+  const a = animPtsVuelta[animIdxVuelta], b = animPtsVuelta[animIdxVuelta + 1];
+  const brg = bearing(a, b);
+  lastBearingVuelta = brg;
+  busMarkerVuelta.setLatLng(b);
+  busMarkerVuelta.setIcon(busIconAmbas(brg, COLOR_VUELTA, '◀ VUELTA'));
+  animIdxVuelta++;
+  animTimerVuelta = setTimeout(runStepVuelta, delay);
+}
+
+// ── Mostrar Ambas ─────────────────────────────────────────────
 function mostrarAmbas() {
   if (!activeLine) return;
   stopAnimation();
+  stopAmbas();
   callesLog = []; renderStreetLog();
   currentStreet = ''; lastGeocodePos = null;
+  if (nextStopMarker) { map.removeLayer(nextStopMarker); nextStopMarker = null; }
 
-  const color = COLORS[activeLine] || '#fff';
+  const colorIda = COLORS[activeLine] || '#e94560';
   if (animLayer) { map.removeLayer(animLayer); animLayer = null; }
   if (busMarker) { map.removeLayer(busMarker); busMarker = null; }
-  if (nextStopMarker) { map.removeLayer(nextStopMarker); nextStopMarker = null; }
 
   const segsIda    = RUTAS[activeLine]?.['Ida']    || [];
   const segsVuelta = RUTAS[activeLine]?.['Vuelta'] || [];
-  const allSegs = [];
 
-  // Ida — línea sólida
-  segsIda.forEach(seg => {
-    allSegs.push(L.polyline(seg, { color, weight: 6, opacity: 1.0, lineJoin: 'round', lineCap: 'round' }));
-  });
-  // Vuelta — línea punteada
-  segsVuelta.forEach(seg => {
-    allSegs.push(L.polyline(seg, { color, weight: 4, opacity: 0.6, dashArray: '10 7', lineJoin: 'round', lineCap: 'round' }));
-  });
-
-  animLayer = L.layerGroup(allSegs).addTo(map);
+  animLayer = L.layerGroup([
+    ...segsIda.map(s    => L.polyline(s, { color: colorIda,    weight: 6, opacity: 1.0, lineJoin:'round', lineCap:'round' })),
+    ...segsVuelta.map(s => L.polyline(s, { color: COLOR_VUELTA, weight: 6, opacity: 1.0, lineJoin:'round', lineCap:'round' })),
+  ]).addTo(map);
 
   const todosLosPts = [...segsIda, ...segsVuelta].flat();
   if (todosLosPts.length) map.fitBounds(L.polyline(todosLosPts).getBounds(), { padding: [30, 30] });
 
-  // Título
-  const desc = getDesc(activeLine, 'Ida');
+  // Preparar puntos interpolados
+  animPtsIda    = segsIda.length    ? interpolate(segsIda.flat(), 20)    : [];
+  animPtsVuelta = segsVuelta.length ? interpolate(segsVuelta.flat(), 20) : [];
+  animIdxIda = 0; animIdxVuelta = 0;
+
+  // Crear marcadores
+  if (animPtsIda.length) {
+    busMarkerIda = L.marker(animPtsIda[0], { icon: busIconAmbas(0, colorIda, '▶ IDA'), zIndexOffset: 1001 }).addTo(map);
+    runStepIda();
+  }
+  if (animPtsVuelta.length) {
+    busMarkerVuelta = L.marker(animPtsVuelta[0], { icon: busIconAmbas(180, COLOR_VUELTA, '◀ VUELTA'), zIndexOffset: 1000 }).addTo(map);
+    runStepVuelta();
+  }
+
+  // Título e info
   document.getElementById('route-title').innerHTML =
-    `<span>${activeLine} — Ida y Vuelta</span> <span class="rt-desc">${desc}</span>`;
-  document.getElementById('info-bar').textContent = `${activeLine} — trazado completo Ida (━━) y Vuelta (╌╌╌)`;
+    `<span>${activeLine} — Ida y Vuelta</span> <span class="rt-desc" style="color:var(--c,#94a3b8)">
+      <span style="color:${colorIda}">▶ Ida</span> &nbsp;
+      <span style="color:${COLOR_VUELTA}">◀ Vuelta</span></span>`;
+  document.getElementById('info-bar').textContent =
+    `${activeLine} — Ida (${colorIda === '#fff' ? 'blanco' : 'color línea'}) y Vuelta (ámbar) circulando simultáneamente`;
 
   dibujarParadas();
 }
