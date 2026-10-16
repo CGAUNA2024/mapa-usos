@@ -1,119 +1,127 @@
 {
-  "fecha": "2026-10-15",
-  "totalUsos": 66859,
-  "tarjetasUnicas": 36044,
+  "fecha": "2026-10-01",
+  "totalUsos": 68053,
+  "tarjetasUnicas": 36879,
   "promedio": 1.85,
   "porTipo": [
     {
       "codigo": 602,
       "nombre": "Plano Tarjeta",
-      "usos": 7408,
-      "tarjetas": 4703,
-      "promedio": 1.58,
-      "pct": 11.1
+      "usos": 7176,
+      "tarjetas": 4564,
+      "promedio": 1.57,
+      "pct": 10.5
+    },
+    {
+      "codigo": 624,
+      "nombre": "Plano Digital",
+      "usos": 2154,
+      "tarjetas": 1575,
+      "promedio": 1.37,
+      "pct": 3.2
     },
     {
       "codigo": 621,
       "nombre": "Atributo Social",
-      "usos": 11268,
-      "tarjetas": 6432,
+      "usos": 10882,
+      "tarjetas": 6213,
       "promedio": 1.75,
-      "pct": 16.9
+      "pct": 16.0
     },
     {
       "codigo": 720,
       "nombre": "BEG Prim",
-      "usos": 6488,
-      "tarjetas": 3746,
-      "promedio": 1.73,
-      "pct": 9.7
+      "usos": 6458,
+      "tarjetas": 3682,
+      "promedio": 1.75,
+      "pct": 9.5
     },
     {
       "codigo": 729,
       "nombre": "BEG Sec",
-      "usos": 15508,
-      "tarjetas": 8173,
-      "promedio": 1.9,
-      "pct": 23.2
+      "usos": 15294,
+      "tarjetas": 7912,
+      "promedio": 1.93,
+      "pct": 22.5
     },
     {
       "codigo": 753,
       "nombre": "BEG Terc",
-      "usos": 4721,
-      "tarjetas": 2497,
-      "promedio": 1.89,
-      "pct": 7.1
+      "usos": 4762,
+      "tarjetas": 2509,
+      "promedio": 1.9,
+      "pct": 7.0
     },
     {
       "codigo": 754,
       "nombre": "BEG Uni",
-      "usos": 11297,
-      "tarjetas": 6305,
-      "promedio": 1.79,
-      "pct": 16.9
+      "usos": 11559,
+      "tarjetas": 6231,
+      "promedio": 1.86,
+      "pct": 17.0
     },
     {
       "codigo": 755,
       "nombre": "BEG Prim N",
-      "usos": 13,
-      "tarjetas": 8,
-      "promedio": 1.62,
+      "usos": 6,
+      "tarjetas": 4,
+      "promedio": 1.5,
       "pct": 0.0
     },
     {
       "codigo": 756,
       "nombre": "BEG Sec N",
-      "usos": 127,
-      "tarjetas": 83,
-      "promedio": 1.53,
+      "usos": 134,
+      "tarjetas": 82,
+      "promedio": 1.63,
       "pct": 0.2
     },
     {
       "codigo": 721,
       "nombre": "Adulto Mayor",
-      "usos": 3063,
-      "tarjetas": 1882,
+      "usos": 3250,
+      "tarjetas": 1992,
       "promedio": 1.63,
-      "pct": 4.6
+      "pct": 4.8
     },
     {
       "codigo": 727,
       "nombre": "Discapacidad Solo",
-      "usos": 954,
-      "tarjetas": 476,
-      "promedio": 2.0,
+      "usos": 931,
+      "tarjetas": 475,
+      "promedio": 1.96,
       "pct": 1.4
     },
     {
       "codigo": 728,
       "nombre": "Discapacidad c/A",
-      "usos": 5471,
-      "tarjetas": 1879,
-      "promedio": 2.91,
-      "pct": 8.2
+      "usos": 4883,
+      "tarjetas": 1728,
+      "promedio": 2.83,
+      "pct": 7.2
     },
     {
       "codigo": 726,
       "nombre": "Inspector Mun",
-      "usos": 366,
-      "tarjetas": 225,
-      "promedio": 1.63,
-      "pct": 0.5
+      "usos": 396,
+      "tarjetas": 242,
+      "promedio": 1.64,
+      "pct": 0.6
     },
     {
       "codigo": 723,
       "nombre": "Transplantado",
-      "usos": 61,
-      "tarjetas": 40,
-      "promedio": 1.52,
+      "usos": 58,
+      "tarjetas": 39,
+      "promedio": 1.49,
       "pct": 0.1
     },
     {
       "codigo": 724,
       "nombre": "HIV",
-      "usos": 114,
-      "tarjetas": 75,
-      "promedio": 1.52,
+      "usos": 110,
+      "tarjetas": 70,
+      "promedio": 1.57,
       "pct": 0.2
     }
   ],
