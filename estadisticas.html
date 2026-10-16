@@ -79,6 +79,20 @@ td.num { text-align: right; font-variant-numeric: tabular-nums; color: #cbd5e1; 
 .hkpi-value { font-size: 22px; font-weight: 700; color: #e2e8f0; }
 .hkpi-sub { font-size: 10px; color: #475569; margin-top: 2px; }
 
+/* ── Tabla pivote ── */
+#tabla-pivot-wrap { overflow-x: auto; margin-top: 4px; }
+#tabla-pivot { border-collapse: collapse; font-size: 11px; white-space: nowrap; width: 100%; }
+#tabla-pivot th, #tabla-pivot td { padding: 5px 8px; border: 1px solid #0f172a; }
+#tabla-pivot .th-fecha { background: #334155; color: #e2e8f0; font-weight: 700; text-align: center; position: sticky; left: 0; z-index: 2; }
+#tabla-pivot .th-tipo { color: #fff; font-weight: 700; text-align: center; }
+#tabla-pivot .th-sub { color: #fff; font-weight: 600; text-align: center; font-size: 10px; }
+#tabla-pivot .th-total { background: #1a1a2e; color: #fff; font-weight: 700; text-align: center; }
+#tabla-pivot .th-total-sub { background: #1a1a2e; color: #94a3b8; font-weight: 600; text-align: center; font-size: 10px; }
+#tabla-pivot .td-fecha { background: #1e293b; color: #e2e8f0; font-weight: 600; text-align: center; position: sticky; left: 0; z-index: 1; }
+#tabla-pivot .td-num { text-align: right; color: #cbd5e1; }
+#tabla-pivot .td-total { text-align: right; font-weight: 700; color: #f1f5f9; background: #243447; }
+#tabla-pivot tr:hover td { filter: brightness(1.15); }
+
 /* ── Loading ── */
 #loading { text-align: center; padding: 60px; color: #475569; font-size: 14px; }
 #error-msg { text-align: center; padding: 40px; color: #e94560; font-size: 14px; background: #1e293b; border-radius: 12px; margin: 20px; }
@@ -103,6 +117,7 @@ td.num { text-align: right; font-variant-numeric: tabular-nums; color: #cbd5e1; 
 <div id="tabs">
   <button class="tab active" onclick="showTab('dia')">📅 Por día</button>
   <button class="tab" onclick="showTab('historico')">📈 Histórico</button>
+  <button class="tab" onclick="showTab('tabla')">📋 Tabla</button>
 </div>
 
 <div id="content">
@@ -145,6 +160,16 @@ td.num { text-align: right; font-variant-numeric: tabular-nums; color: #cbd5e1; 
         </thead>
         <tbody id="tabla-body"></tbody>
       </table>
+    </div>
+  </div>
+
+  <!-- ══ TAB TABLA ══ -->
+  <div id="tab-tabla" class="hidden">
+    <div class="panel" style="padding:12px">
+      <h2>Histórico diario por tipo de contrato</h2>
+      <div id="tabla-pivot-wrap">
+        <table id="tabla-pivot"><thead id="tabla-pivot-head"></thead><tbody id="tabla-pivot-body"></tbody></table>
+      </div>
     </div>
   </div>
 
@@ -202,11 +227,13 @@ function fmt(n) { return Number(n).toLocaleString('es-AR'); }
 function showTab(tab) {
   tabActiva = tab;
   document.querySelectorAll('.tab').forEach((t, i) => {
-    t.classList.toggle('active', ['dia','historico'][i] === tab);
+    t.classList.toggle('active', ['dia','historico','tabla'][i] === tab);
   });
   document.getElementById('tab-dia').classList.toggle('hidden', tab !== 'dia');
   document.getElementById('tab-historico').classList.toggle('hidden', tab !== 'historico');
+  document.getElementById('tab-tabla').classList.toggle('hidden', tab !== 'tabla');
   if (tab === 'historico' && HIST) renderHistorico();
+  if (tab === 'tabla' && DIAS.length) renderTabla();
 }
 
 // ── Carga de datos ────────────────────────────────────────────────
@@ -388,6 +415,82 @@ function renderHistorico() {
         y: { ticks: { color: '#e2e8f0', font: { size: 12 } }, grid: { display: false } }
       }
     }
+  });
+}
+
+// ── Render tabla pivote ───────────────────────────────────────────
+const ORDEN_TABLA = [602, 624, 621, 720, 729, 753, 754, 755, 756, 721, 727, 728, 726, 723, 724];
+const NOMBRES_TABLA = {
+  602:'Plano Tarjeta', 624:'Plano Digital', 621:'Atributo Social',
+  720:'BEG Prim', 729:'BEG Sec', 753:'BEG Terc', 754:'BEG Uni',
+  755:'BEG Prim N', 756:'BEG Sec N', 721:'Adulto Mayor',
+  727:'Discap. Solo', 728:'Discap. c/A', 726:'Insp. Mun',
+  723:'Transplant.', 724:'HIV',
+};
+const COLORES_TABLA = [
+  '#e94560','#0ea5e9','#a855f7','#f59e0b','#10b981',
+  '#ef4444','#3b82f6','#8b5cf6','#f97316','#06b6d4',
+  '#ec4899','#22d3ee','#84cc16','#fb923c','#a78bfa',
+];
+let tablaRendered = false;
+
+function renderTabla() {
+  if (tablaRendered) return;
+  tablaRendered = true;
+
+  const head = document.getElementById('tabla-pivot-head');
+  const body = document.getElementById('tabla-pivot-body');
+
+  // Fila 1: encabezados de tipo
+  const tr1 = document.createElement('tr');
+  tr1.innerHTML = '<th class="th-fecha" rowspan="2">FECHA</th>';
+  ORDEN_TABLA.forEach((cod, i) => {
+    const th = document.createElement('th');
+    th.colSpan = 2;
+    th.className = 'th-tipo';
+    th.style.background = COLORES_TABLA[i];
+    th.innerHTML = `${cod}<br><span style="font-size:9px;font-weight:400;opacity:.85">${NOMBRES_TABLA[cod]}</span>`;
+    tr1.appendChild(th);
+  });
+  // TOTAL
+  const thTot = document.createElement('th');
+  thTot.colSpan = 2; thTot.className = 'th-total'; thTot.textContent = 'TOTAL';
+  tr1.appendChild(thTot);
+  head.appendChild(tr1);
+
+  // Fila 2: TOTAL / DISTINTAS
+  const tr2 = document.createElement('tr');
+  ORDEN_TABLA.forEach((cod, i) => {
+    ['TOTAL','DISTINTAS'].forEach(lbl => {
+      const th = document.createElement('th');
+      th.className = 'th-sub';
+      th.style.background = COLORES_TABLA[i];
+      th.textContent = lbl;
+      tr2.appendChild(th);
+    });
+  });
+  ['TOTAL','DISTINTAS'].forEach(lbl => {
+    const th = document.createElement('th');
+    th.className = 'th-total-sub'; th.textContent = lbl;
+    tr2.appendChild(th);
+  });
+  head.appendChild(tr2);
+
+  // Filas de datos
+  DIAS.forEach(dia => {
+    const tipos = {};
+    (dia.porTipo || []).forEach(t => { tipos[t.codigo] = t; });
+    const [y, m, d] = dia.fecha.split('-');
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td class="td-fecha">${d}/${m}/${y}</td>`;
+    ORDEN_TABLA.forEach(cod => {
+      const t = tipos[cod];
+      const u = t ? t.usos : 0;
+      const k = t ? t.tarjetas : 0;
+      tr.innerHTML += `<td class="td-num">${u ? fmt(u) : ''}</td><td class="td-num">${k ? fmt(k) : ''}</td>`;
+    });
+    tr.innerHTML += `<td class="td-total">${fmt(dia.totalUsos)}</td><td class="td-total">${fmt(dia.tarjetasUnicas)}</td>`;
+    body.appendChild(tr);
   });
 }
 
