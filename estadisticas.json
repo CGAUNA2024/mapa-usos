@@ -5,20 +5,12 @@
   "promedio": 1.85,
   "porTipo": [
     {
-      "codigo": 729,
-      "nombre": "BEG Sec",
-      "usos": 15508,
-      "tarjetas": 8173,
-      "promedio": 1.9,
-      "pct": 23.2
-    },
-    {
-      "codigo": 754,
-      "nombre": "BEG Uni",
-      "usos": 11297,
-      "tarjetas": 6305,
-      "promedio": 1.79,
-      "pct": 16.9
+      "codigo": 602,
+      "nombre": "Plano Tarjeta",
+      "usos": 7408,
+      "tarjetas": 4703,
+      "promedio": 1.58,
+      "pct": 11.1
     },
     {
       "codigo": 621,
@@ -29,14 +21,6 @@
       "pct": 16.9
     },
     {
-      "codigo": 602,
-      "nombre": "Plano Tarjeta",
-      "usos": 7408,
-      "tarjetas": 4703,
-      "promedio": 1.58,
-      "pct": 11.1
-    },
-    {
       "codigo": 720,
       "nombre": "BEG Prim",
       "usos": 6488,
@@ -45,12 +29,12 @@
       "pct": 9.7
     },
     {
-      "codigo": 728,
-      "nombre": "Discapacidad c/A",
-      "usos": 5471,
-      "tarjetas": 1879,
-      "promedio": 2.91,
-      "pct": 8.2
+      "codigo": 729,
+      "nombre": "BEG Sec",
+      "usos": 15508,
+      "tarjetas": 8173,
+      "promedio": 1.9,
+      "pct": 23.2
     },
     {
       "codigo": 753,
@@ -59,6 +43,30 @@
       "tarjetas": 2497,
       "promedio": 1.89,
       "pct": 7.1
+    },
+    {
+      "codigo": 754,
+      "nombre": "BEG Uni",
+      "usos": 11297,
+      "tarjetas": 6305,
+      "promedio": 1.79,
+      "pct": 16.9
+    },
+    {
+      "codigo": 755,
+      "nombre": "BEG Prim N",
+      "usos": 13,
+      "tarjetas": 8,
+      "promedio": 1.62,
+      "pct": 0.0
+    },
+    {
+      "codigo": 756,
+      "nombre": "BEG Sec N",
+      "usos": 127,
+      "tarjetas": 83,
+      "promedio": 1.53,
+      "pct": 0.2
     },
     {
       "codigo": 721,
@@ -77,28 +85,20 @@
       "pct": 1.4
     },
     {
+      "codigo": 728,
+      "nombre": "Discapacidad c/A",
+      "usos": 5471,
+      "tarjetas": 1879,
+      "promedio": 2.91,
+      "pct": 8.2
+    },
+    {
       "codigo": 726,
       "nombre": "Inspector Mun",
       "usos": 366,
       "tarjetas": 225,
       "promedio": 1.63,
       "pct": 0.5
-    },
-    {
-      "codigo": 756,
-      "nombre": "BEG Sec N",
-      "usos": 127,
-      "tarjetas": 83,
-      "promedio": 1.53,
-      "pct": 0.2
-    },
-    {
-      "codigo": 724,
-      "nombre": "HIV",
-      "usos": 114,
-      "tarjetas": 75,
-      "promedio": 1.52,
-      "pct": 0.2
     },
     {
       "codigo": 723,
@@ -109,12 +109,12 @@
       "pct": 0.1
     },
     {
-      "codigo": 755,
-      "nombre": "BEG Prim N",
-      "usos": 13,
-      "tarjetas": 8,
-      "promedio": 1.62,
-      "pct": 0.0
+      "codigo": 724,
+      "nombre": "HIV",
+      "usos": 114,
+      "tarjetas": 75,
+      "promedio": 1.52,
+      "pct": 0.2
     }
   ],
   "generado": "2026-10-16"
