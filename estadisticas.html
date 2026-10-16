@@ -11,66 +11,79 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #0f172a; color: #
 
 /* ── Header ── */
 #header {
-  background: #0f172a;
-  border-bottom: 2px solid #e94560;
-  padding: 10px 20px;
-  display: flex; align-items: center; gap: 14px;
+  background: #0f172a; border-bottom: 2px solid #e94560;
+  padding: 10px 20px; display: flex; align-items: center; gap: 14px;
 }
 #header img { height: 34px; }
 #header h1 { font-size: 14px; color: #e94560; line-height: 1.3; }
 #header h1 span { display: block; font-size: 11px; color: #94a3b8; font-weight: normal; }
 #header-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
-#fecha-lbl { font-size: 13px; color: #94a3b8; }
-#fecha-lbl strong { color: #f1f5f9; }
-#generado { font-size: 11px; color: #475569; }
+
+/* ── Tabs ── */
+#tabs { display: flex; gap: 6px; padding: 16px 20px 0; max-width: 1000px; margin: 0 auto; }
+.tab {
+  padding: 9px 22px; border-radius: 8px 8px 0 0; font-size: 14px; font-weight: 600;
+  cursor: pointer; background: #1e293b; color: #94a3b8;
+  border: 1px solid #334155; border-bottom: none; transition: all .15s;
+}
+.tab.active { background: #e94560; color: #fff; border-color: #e94560; }
+.tab:hover:not(.active) { background: #334155; color: #e2e8f0; }
 
 /* ── Contenido ── */
-#content { max-width: 1000px; margin: 0 auto; padding: 20px 16px; }
+#content { max-width: 1000px; margin: 0 auto; padding: 0 16px 24px; }
+.panel { background: #1e293b; border-radius: 0 12px 12px 12px; padding: 20px; margin-bottom: 16px; }
+#panel-dia { border-radius: 12px; }
 
-/* ── Tarjetas KPI ── */
-#kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 24px; }
-.kpi {
-  background: #1e293b; border-radius: 12px;
-  padding: 18px 20px;
-  border-left: 4px solid;
+/* ── Selector de fecha ── */
+#fecha-row { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; }
+#fecha-row label { font-size: 12px; color: #64748b; }
+#fecha-sel {
+  background: #0f172a; border: 1px solid #334155; color: #e2e8f0;
+  border-radius: 6px; padding: 6px 10px; font-size: 13px;
 }
+#nav-prev, #nav-next {
+  background: #334155; border: none; color: #94a3b8; border-radius: 6px;
+  padding: 6px 12px; cursor: pointer; font-size: 16px;
+}
+#nav-prev:hover, #nav-next:hover { background: #475569; }
+#txt-fecha-dia { font-size: 15px; font-weight: 600; color: #f1f5f9; }
+
+/* ── KPIs ── */
+#kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 18px; }
+.kpi { background: #0f172a; border-radius: 10px; padding: 14px 18px; border-left: 4px solid; }
 .kpi.k1 { border-color: #e94560; }
 .kpi.k2 { border-color: #0ea5e9; }
 .kpi.k3 { border-color: #a855f7; }
-.kpi-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #64748b; margin-bottom: 6px; }
-.kpi-value { font-size: 32px; font-weight: 700; line-height: 1; }
+.kpi-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: #64748b; margin-bottom: 4px; }
+.kpi-value { font-size: 28px; font-weight: 700; line-height: 1; }
 .kpi.k1 .kpi-value { color: #e94560; }
 .kpi.k2 .kpi-value { color: #0ea5e9; }
 .kpi.k3 .kpi-value { color: #a855f7; }
-.kpi-sub { font-size: 11px; color: #475569; margin-top: 4px; }
-
-/* ── Panel gráfico ── */
-#panel-chart {
-  background: #1e293b; border-radius: 12px;
-  padding: 20px; margin-bottom: 20px;
-}
-#panel-chart h2 { font-size: 13px; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; }
 
 /* ── Tabla ── */
-#panel-tabla {
-  background: #1e293b; border-radius: 12px;
-  padding: 20px;
-}
-#panel-tabla h2 { font-size: 13px; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px; }
+.panel h2 { font-size: 12px; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px; }
 table { width: 100%; border-collapse: collapse; font-size: 13px; }
-th { text-align: left; padding: 8px 10px; color: #64748b; font-size: 11px; text-transform: uppercase; letter-spacing: .8px; border-bottom: 1px solid #334155; }
-td { padding: 9px 10px; border-bottom: 1px solid #1e293b; color: #e2e8f0; }
+th { text-align: left; padding: 7px 10px; color: #475569; font-size: 11px; text-transform: uppercase; letter-spacing: .7px; border-bottom: 1px solid #334155; }
+td { padding: 8px 10px; border-bottom: 1px solid #0f172a; }
 tr:last-child td { border-bottom: none; }
-tr:hover td { background: #0f172a; }
-td.num { text-align: right; font-variant-numeric: tabular-nums; }
-.bar-cell { width: 120px; }
-.bar-bg { background: #0f172a; border-radius: 4px; height: 6px; overflow: hidden; }
-.bar-fill { height: 6px; border-radius: 4px; background: #e94560; }
-.badge-tipo { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+tr:hover td { background: #0f172a55; }
+td.num { text-align: right; font-variant-numeric: tabular-nums; color: #cbd5e1; }
+.bar-bg { background: #0f172a; border-radius: 4px; height: 5px; overflow: hidden; width: 100px; }
+.bar-fill { height: 5px; border-radius: 4px; }
+.badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
 
-/* ── Loading / error ── */
+/* ── Histórico ── */
+#hist-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 18px; }
+.hkpi { background: #0f172a; border-radius: 10px; padding: 12px 16px; }
+.hkpi-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: #64748b; margin-bottom: 4px; }
+.hkpi-value { font-size: 22px; font-weight: 700; color: #e2e8f0; }
+.hkpi-sub { font-size: 10px; color: #475569; margin-top: 2px; }
+
+/* ── Loading ── */
 #loading { text-align: center; padding: 60px; color: #475569; font-size: 14px; }
 #error-msg { text-align: center; padding: 40px; color: #e94560; font-size: 14px; background: #1e293b; border-radius: 12px; margin: 20px; }
+
+.hidden { display: none !important; }
 </style>
 </head>
 <body>
@@ -80,10 +93,6 @@ td.num { text-align: right; font-variant-numeric: tabular-nums; }
        onerror="this.style.display='none'" alt="ERSA">
   <h1>Estadísticas SUBE<span>Líneas Urbanas Corrientes · IDEmpresa 292 y 330</span></h1>
   <div id="header-right">
-    <div>
-      <div id="fecha-lbl">Datos del día: <strong id="txt-fecha">—</strong></div>
-      <div id="generado">Generado: <span id="txt-generado">—</span></div>
-    </div>
     <a href="recorridos_animados.html"
        style="padding:6px 14px;background:#1e293b;border:1px solid #334155;border-radius:6px;color:#94a3b8;font-size:12px;text-decoration:none;">
       🗺 Mapa
@@ -91,143 +100,298 @@ td.num { text-align: right; font-variant-numeric: tabular-nums; }
   </div>
 </div>
 
+<div id="tabs">
+  <button class="tab active" onclick="showTab('dia')">📅 Por día</button>
+  <button class="tab" onclick="showTab('historico')">📈 Histórico</button>
+</div>
+
 <div id="content">
   <div id="loading">⏳ Cargando datos...</div>
-  <div id="error-msg" style="display:none"></div>
+  <div id="error-msg" class="hidden"></div>
 
-  <div id="main" style="display:none">
-    <div id="kpis">
-      <div class="kpi k1">
-        <div class="kpi-label">Usos totales</div>
-        <div class="kpi-value" id="kpi-usos">—</div>
-        <div class="kpi-sub">viajes registrados</div>
+  <!-- ══ TAB DÍA ══ -->
+  <div id="tab-dia" class="hidden">
+    <div class="panel" id="panel-dia">
+      <div id="fecha-row">
+        <button id="nav-prev" onclick="navFecha(-1)">‹</button>
+        <div>
+          <div id="txt-fecha-dia">—</div>
+          <div style="font-size:11px;color:#475569" id="txt-generado"></div>
+        </div>
+        <button id="nav-next" onclick="navFecha(1)">›</button>
+        <label>Ir a: <input type="date" id="fecha-sel" onchange="irAFecha(this.value)"
+          style="background:#0f172a;border:1px solid #334155;color:#e2e8f0;border-radius:6px;padding:5px 8px;font-size:13px;margin-left:4px"></label>
       </div>
-      <div class="kpi k2">
-        <div class="kpi-label">Tarjetas únicas</div>
-        <div class="kpi-value" id="kpi-tarjetas">—</div>
-        <div class="kpi-sub">tarjetas distintas</div>
-      </div>
-      <div class="kpi k3">
-        <div class="kpi-label">Promedio usos/tarjeta</div>
-        <div class="kpi-value" id="kpi-prom">—</div>
-        <div class="kpi-sub">viajes por tarjeta</div>
+
+      <div id="kpis">
+        <div class="kpi k1"><div class="kpi-label">Usos totales</div><div class="kpi-value" id="kpi-usos">—</div></div>
+        <div class="kpi k2"><div class="kpi-label">Tarjetas únicas</div><div class="kpi-value" id="kpi-tarjetas">—</div></div>
+        <div class="kpi k3"><div class="kpi-label">Promedio</div><div class="kpi-value" id="kpi-prom">—</div></div>
       </div>
     </div>
 
-    <div id="panel-chart">
-      <h2>Usos por tipo de tarjeta</h2>
-      <canvas id="myChart" height="320"></canvas>
-    </div>
-
-    <div id="panel-tabla">
+    <div class="panel">
       <h2>Detalle por tipo de contrato</h2>
       <table>
         <thead>
           <tr>
-            <th>Tipo de tarjeta</th>
+            <th>Tipo</th>
             <th style="text-align:right">Usos</th>
-            <th style="text-align:right">Tarjetas únicas</th>
-            <th style="text-align:right">Promedio</th>
-            <th style="text-align:right">% del total</th>
-            <th class="bar-cell"></th>
+            <th style="text-align:right">Tarjetas</th>
+            <th style="text-align:right">Prom.</th>
+            <th style="text-align:right">%</th>
+            <th></th>
           </tr>
         </thead>
         <tbody id="tabla-body"></tbody>
       </table>
     </div>
   </div>
+
+  <!-- ══ TAB HISTÓRICO ══ -->
+  <div id="tab-historico" class="hidden">
+    <div class="panel">
+      <h2>Evolución diaria — Usos totales</h2>
+      <div id="hist-kpis">
+        <div class="hkpi">
+          <div class="hkpi-label">Período</div>
+          <div class="hkpi-value" id="h-periodo" style="font-size:14px">—</div>
+        </div>
+        <div class="hkpi">
+          <div class="hkpi-label">Máximo día</div>
+          <div class="hkpi-value" id="h-max">—</div>
+          <div class="hkpi-sub" id="h-max-fecha"></div>
+        </div>
+        <div class="hkpi">
+          <div class="hkpi-label">Promedio diario</div>
+          <div class="hkpi-value" id="h-prom">—</div>
+          <div class="hkpi-sub">usos/día</div>
+        </div>
+        <div class="hkpi">
+          <div class="hkpi-label">Total período</div>
+          <div class="hkpi-value" id="h-total">—</div>
+          <div class="hkpi-sub">usos acumulados</div>
+        </div>
+      </div>
+      <canvas id="chartLinea" height="260"></canvas>
+    </div>
+
+    <div class="panel">
+      <h2>Distribución acumulada por tipo de contrato</h2>
+      <canvas id="chartBarra" height="280"></canvas>
+    </div>
+  </div>
 </div>
 
 <script>
-const DATA_URL = 'https://raw.githubusercontent.com/CGAUNA2024/mapa-usos/main/estadisticas.json';
-
+const BASE = 'https://raw.githubusercontent.com/CGAUNA2024/mapa-usos/main/';
 const PALETA = [
   '#e94560','#0ea5e9','#a855f7','#f59e0b','#10b981',
   '#ef4444','#3b82f6','#8b5cf6','#f97316','#06b6d4',
   '#ec4899','#22d3ee','#84cc16','#fb923c','#a78bfa',
 ];
 
-function fmt(n) { return n.toLocaleString('es-AR'); }
+let HIST = null;   // historico.json completo
+let DIAS = [];     // array de días
+let idxActual = 0; // índice en DIAS
+let chartLinea = null, chartBarra = null;
+let tabActiva = 'dia';
 
-fetch(DATA_URL + '?t=' + Date.now())
-  .then(r => { if (!r.ok) throw new Error('No se pudo cargar estadisticas.json'); return r.json(); })
-  .then(data => {
+function fmt(n) { return Number(n).toLocaleString('es-AR'); }
+
+function showTab(tab) {
+  tabActiva = tab;
+  document.querySelectorAll('.tab').forEach((t, i) => {
+    t.classList.toggle('active', ['dia','historico'][i] === tab);
+  });
+  document.getElementById('tab-dia').classList.toggle('hidden', tab !== 'dia');
+  document.getElementById('tab-historico').classList.toggle('hidden', tab !== 'historico');
+  if (tab === 'historico' && HIST) renderHistorico();
+}
+
+// ── Carga de datos ────────────────────────────────────────────────
+async function cargar() {
+  // Intentar historico.json primero
+  try {
+    const r = await fetch(BASE + 'historico.json?t=' + Date.now());
+    if (r.ok) {
+      HIST = await r.json();
+      DIAS = HIST.dias || [];
+      document.getElementById('loading').style.display = 'none';
+      if (DIAS.length) {
+        idxActual = DIAS.length - 1;
+        renderDia();
+      }
+      document.getElementById('tab-dia').classList.remove('hidden');
+      return;
+    }
+  } catch(e) {}
+
+  // Fallback: estadisticas.json (sólo el día de ayer)
+  try {
+    const r = await fetch(BASE + 'estadisticas.json?t=' + Date.now());
+    if (!r.ok) throw new Error('No se pudo cargar estadisticas.json');
+    const data = await r.json();
+    DIAS = [data];
+    idxActual = 0;
     document.getElementById('loading').style.display = 'none';
-    document.getElementById('main').style.display = 'block';
+    renderDia();
+    document.getElementById('tab-dia').classList.remove('hidden');
+  } catch(e) {
+    document.getElementById('loading').style.display = 'none';
+    const err = document.getElementById('error-msg');
+    err.classList.remove('hidden');
+    err.innerHTML = `<b>⚠ Sin datos aún</b><br><br>${e.message}<br><br>
+      Ejecutá <code>python generar_historico.py</code> para generar los datos históricos.`;
+  }
+}
 
-    document.getElementById('txt-fecha').textContent    = data.fecha;
-    document.getElementById('txt-generado').textContent = data.generado;
-    document.getElementById('kpi-usos').textContent     = fmt(data.totalUsos);
-    document.getElementById('kpi-tarjetas').textContent = fmt(data.tarjetasUnicas);
-    document.getElementById('kpi-prom').textContent     = data.promedio.toFixed(1);
+// ── Render día ────────────────────────────────────────────────────
+function renderDia() {
+  const d = DIAS[idxActual];
+  if (!d) return;
 
-    const tipos  = data.porTipo;
-    const labels = tipos.map(t => t.nombre);
-    const usos   = tipos.map(t => t.usos);
-    const colores = tipos.map((_, i) => PALETA[i % PALETA.length]);
+  document.getElementById('txt-fecha-dia').textContent = formatFecha(d.fecha);
+  document.getElementById('txt-generado').textContent  = HIST ? `Actualizado: ${HIST.generado}` : `Generado: ${d.generado || ''}`;
+  document.getElementById('kpi-usos').textContent      = fmt(d.totalUsos);
+  document.getElementById('kpi-tarjetas').textContent  = fmt(d.tarjetasUnicas);
+  document.getElementById('kpi-prom').textContent      = Number(d.promedio).toFixed(1);
 
-    // ── Gráfico barras horizontales ──
-    new Chart(document.getElementById('myChart'), {
-      type: 'bar',
-      data: {
-        labels,
-        datasets: [{
-          label: 'Usos',
-          data: usos,
-          backgroundColor: colores,
-          borderRadius: 5,
-          borderSkipped: false,
-        }]
-      },
-      options: {
-        indexAxis: 'y',
-        responsive: true,
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            callbacks: {
-              label: ctx => ` ${fmt(ctx.raw)} usos  (${tipos[ctx.dataIndex].pct}%)`
-            }
-          }
-        },
-        scales: {
-          x: {
-            ticks: { color: '#64748b', font: { size: 11 } },
-            grid:  { color: '#1e293b' },
-          },
-          y: {
-            ticks: { color: '#e2e8f0', font: { size: 12 } },
-            grid:  { display: false },
+  if (document.getElementById('fecha-sel')) {
+    document.getElementById('fecha-sel').value = d.fecha;
+  }
+
+  // Nav buttons
+  document.getElementById('nav-prev').disabled = idxActual === 0;
+  document.getElementById('nav-next').disabled = idxActual === DIAS.length - 1;
+
+  // Tabla
+  const tbody = document.getElementById('tabla-body');
+  tbody.innerHTML = '';
+  (d.porTipo || []).forEach((t, i) => {
+    const color = PALETA[i % PALETA.length];
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><span class="badge" style="background:${color}22;color:${color}">${t.nombre}</span></td>
+      <td class="num">${fmt(t.usos)}</td>
+      <td class="num">${fmt(t.tarjetas)}</td>
+      <td class="num">${Number(t.promedio).toFixed(1)}</td>
+      <td class="num">${t.pct}%</td>
+      <td><div class="bar-bg"><div class="bar-fill" style="width:${t.pct}%;background:${color}"></div></div></td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function navFecha(delta) {
+  idxActual = Math.max(0, Math.min(DIAS.length - 1, idxActual + delta));
+  renderDia();
+}
+
+function irAFecha(val) {
+  const idx = DIAS.findIndex(d => d.fecha === val);
+  if (idx >= 0) { idxActual = idx; renderDia(); }
+}
+
+function formatFecha(s) {
+  const [y, m, d] = s.split('-');
+  const meses = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  return `${parseInt(d)} ${meses[parseInt(m)-1]} ${y}`;
+}
+
+// ── Render histórico ──────────────────────────────────────────────
+function renderHistorico() {
+  if (!DIAS.length) return;
+
+  const totalAcum = DIAS.reduce((a, d) => a + d.totalUsos, 0);
+  const maxDia    = DIAS.reduce((a, d) => d.totalUsos > a.totalUsos ? d : a, DIAS[0]);
+  const promDia   = Math.round(totalAcum / DIAS.length);
+
+  document.getElementById('h-periodo').textContent   = `${formatFecha(DIAS[0].fecha)} — ${formatFecha(DIAS[DIAS.length-1].fecha)}`;
+  document.getElementById('h-max').textContent        = fmt(maxDia.totalUsos);
+  document.getElementById('h-max-fecha').textContent  = formatFecha(maxDia.fecha);
+  document.getElementById('h-prom').textContent       = fmt(promDia);
+  document.getElementById('h-total').textContent      = fmt(totalAcum);
+
+  // Agrupar por semana para no saturar el gráfico si hay muchos días
+  const labels = DIAS.map(d => d.fecha.slice(5)); // MM-DD
+  const dataUsos = DIAS.map(d => d.totalUsos);
+
+  // Gráfico de línea
+  if (chartLinea) chartLinea.destroy();
+  chartLinea = new Chart(document.getElementById('chartLinea'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Usos totales',
+        data: dataUsos,
+        borderColor: '#e94560',
+        backgroundColor: '#e9456020',
+        fill: true,
+        tension: 0.3,
+        pointRadius: DIAS.length > 60 ? 0 : 3,
+        pointHoverRadius: 5,
+        borderWidth: 2,
+      }]
+    },
+    options: {
+      responsive: true,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            title: ctx => formatFecha(DIAS[ctx[0].dataIndex].fecha),
+            label: ctx => ` ${fmt(ctx.raw)} usos`,
           }
         }
+      },
+      scales: {
+        x: { ticks: { color: '#475569', maxTicksLimit: 12, font: { size: 11 } }, grid: { color: '#1e293b' } },
+        y: { ticks: { color: '#475569', font: { size: 11 } }, grid: { color: '#1e293b' } }
       }
-    });
-
-    // ── Tabla ──
-    const tbody = document.getElementById('tabla-body');
-    tipos.forEach((t, i) => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td><span class="badge-tipo" style="background:${colores[i]}22;color:${colores[i]}">${t.nombre}</span></td>
-        <td class="num">${fmt(t.usos)}</td>
-        <td class="num">${fmt(t.tarjetas)}</td>
-        <td class="num">${t.promedio.toFixed(1)}</td>
-        <td class="num">${t.pct}%</td>
-        <td class="bar-cell">
-          <div class="bar-bg">
-            <div class="bar-fill" style="width:${t.pct}%;background:${colores[i]}"></div>
-          </div>
-        </td>`;
-      tbody.appendChild(tr);
-    });
-  })
-  .catch(err => {
-    document.getElementById('loading').style.display = 'none';
-    document.getElementById('error-msg').style.display = 'block';
-    document.getElementById('error-msg').innerHTML =
-      `<b>⚠ Sin datos aún</b><br><br>${err.message}<br><br>
-       Ejecutá <code>python generar_estadisticas.py</code> para generar y subir los datos.`;
+    }
   });
+
+  // Acumulado por tipo
+  const acum = {};
+  DIAS.forEach(d => {
+    (d.porTipo || []).forEach(t => {
+      if (!acum[t.nombre]) acum[t.nombre] = { nombre: t.nombre, usos: 0 };
+      acum[t.nombre].usos += t.usos;
+    });
+  });
+  const tiposOrd = Object.values(acum).sort((a, b) => b.usos - a.usos);
+
+  if (chartBarra) chartBarra.destroy();
+  chartBarra = new Chart(document.getElementById('chartBarra'), {
+    type: 'bar',
+    data: {
+      labels: tiposOrd.map(t => t.nombre),
+      datasets: [{
+        label: 'Usos acumulados',
+        data: tiposOrd.map(t => t.usos),
+        backgroundColor: tiposOrd.map((_, i) => PALETA[i % PALETA.length]),
+        borderRadius: 5,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ` ${fmt(ctx.raw)} usos` } }
+      },
+      scales: {
+        x: { ticks: { color: '#475569', font: { size: 11 } }, grid: { color: '#1e293b' } },
+        y: { ticks: { color: '#e2e8f0', font: { size: 12 } }, grid: { display: false } }
+      }
+    }
+  });
+}
+
+cargar();
 </script>
 </body>
 </html>
