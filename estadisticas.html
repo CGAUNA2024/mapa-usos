@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Estadísticas SUBE — ERSA Corrientes</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', Arial, sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; }
+
+/* ── Header ── */
+#header {
+  background: #0f172a;
+  border-bottom: 2px solid #e94560;
+  padding: 10px 20px;
+  display: flex; align-items: center; gap: 14px;
+}
+#header img { height: 34px; }
+#header h1 { font-size: 14px; color: #e94560; line-height: 1.3; }
+#header h1 span { display: block; font-size: 11px; color: #94a3b8; font-weight: normal; }
+#header-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+#fecha-lbl { font-size: 13px; color: #94a3b8; }
+#fecha-lbl strong { color: #f1f5f9; }
+#generado { font-size: 11px; color: #475569; }
+
+/* ── Contenido ── */
+#content { max-width: 1000px; margin: 0 auto; padding: 20px 16px; }
+
+/* ── Tarjetas KPI ── */
+#kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 24px; }
+.kpi {
+  background: #1e293b; border-radius: 12px;
+  padding: 18px 20px;
+  border-left: 4px solid;
+}
+.kpi.k1 { border-color: #e94560; }
+.kpi.k2 { border-color: #0ea5e9; }
+.kpi.k3 { border-color: #a855f7; }
+.kpi-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #64748b; margin-bottom: 6px; }
+.kpi-value { font-size: 32px; font-weight: 700; line-height: 1; }
+.kpi.k1 .kpi-value { color: #e94560; }
+.kpi.k2 .kpi-value { color: #0ea5e9; }
+.kpi.k3 .kpi-value { color: #a855f7; }
+.kpi-sub { font-size: 11px; color: #475569; margin-top: 4px; }
+
+/* ── Panel gráfico ── */
+#panel-chart {
+  background: #1e293b; border-radius: 12px;
+  padding: 20px; margin-bottom: 20px;
+}
+#panel-chart h2 { font-size: 13px; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; }
+
+/* ── Tabla ── */
+#panel-tabla {
+  background: #1e293b; border-radius: 12px;
+  padding: 20px;
+}
+#panel-tabla h2 { font-size: 13px; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { text-align: left; padding: 8px 10px; color: #64748b; font-size: 11px; text-transform: uppercase; letter-spacing: .8px; border-bottom: 1px solid #334155; }
+td { padding: 9px 10px; border-bottom: 1px solid #1e293b; color: #e2e8f0; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: #0f172a; }
+td.num { text-align: right; font-variant-numeric: tabular-nums; }
+.bar-cell { width: 120px; }
+.bar-bg { background: #0f172a; border-radius: 4px; height: 6px; overflow: hidden; }
+.bar-fill { height: 6px; border-radius: 4px; background: #e94560; }
+.badge-tipo { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+
+/* ── Loading / error ── */
+#loading { text-align: center; padding: 60px; color: #475569; font-size: 14px; }
+#error-msg { text-align: center; padding: 40px; color: #e94560; font-size: 14px; background: #1e293b; border-radius: 12px; margin: 20px; }
+</style>
+</head>
+<body>
+
+<div id="header">
+  <img src="https://raw.githubusercontent.com/CGAUNA2024/mapa-usos/main/logo_ersa.png"
+       onerror="this.style.display='none'" alt="ERSA">
+  <h1>Estadísticas SUBE<span>Líneas Urbanas Corrientes · IDEmpresa 292 y 330</span></h1>
+  <div id="header-right">
+    <div>
+      <div id="fecha-lbl">Datos del día: <strong id="txt-fecha">—</strong></div>
+      <div id="generado">Generado: <span id="txt-generado">—</span></div>
+    </div>
+    <a href="recorridos_animados.html"
+       style="padding:6px 14px;background:#1e293b;border:1px solid #334155;border-radius:6px;color:#94a3b8;font-size:12px;text-decoration:none;">
+      🗺 Mapa
+    </a>
+  </div>
+</div>
+
+<div id="content">
+  <div id="loading">⏳ Cargando datos...</div>
+  <div id="error-msg" style="display:none"></div>
+
+  <div id="main" style="display:none">
+    <div id="kpis">
+      <div class="kpi k1">
+        <div class="kpi-label">Usos totales</div>
+        <div class="kpi-value" id="kpi-usos">—</div>
+        <div class="kpi-sub">viajes registrados</div>
+      </div>
+      <div class="kpi k2">
+        <div class="kpi-label">Tarjetas únicas</div>
+        <div class="kpi-value" id="kpi-tarjetas">—</div>
+        <div class="kpi-sub">tarjetas distintas</div>
+      </div>
+      <div class="kpi k3">
+        <div class="kpi-label">Promedio usos/tarjeta</div>
+        <div class="kpi-value" id="kpi-prom">—</div>
+        <div class="kpi-sub">viajes por tarjeta</div>
+      </div>
+    </div>
+
+    <div id="panel-chart">
+      <h2>Usos por tipo de tarjeta</h2>
+      <canvas id="myChart" height="320"></canvas>
+    </div>
+
+    <div id="panel-tabla">
+      <h2>Detalle por tipo de contrato</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Tipo de tarjeta</th>
+            <th style="text-align:right">Usos</th>
+            <th style="text-align:right">Tarjetas únicas</th>
+            <th style="text-align:right">Promedio</th>
+            <th style="text-align:right">% del total</th>
+            <th class="bar-cell"></th>
+          </tr>
+        </thead>
+        <tbody id="tabla-body"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+const DATA_URL = 'https://raw.githubusercontent.com/CGAUNA2024/mapa-usos/main/estadisticas.json';
+
+const PALETA = [
+  '#e94560','#0ea5e9','#a855f7','#f59e0b','#10b981',
+  '#ef4444','#3b82f6','#8b5cf6','#f97316','#06b6d4',
+  '#ec4899','#22d3ee','#84cc16','#fb923c','#a78bfa',
+];
+
+function fmt(n) { return n.toLocaleString('es-AR'); }
+
+fetch(DATA_URL + '?t=' + Date.now())
+  .then(r => { if (!r.ok) throw new Error('No se pudo cargar estadisticas.json'); return r.json(); })
+  .then(data => {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('main').style.display = 'block';
+
+    document.getElementById('txt-fecha').textContent    = data.fecha;
+    document.getElementById('txt-generado').textContent = data.generado;
+    document.getElementById('kpi-usos').textContent     = fmt(data.totalUsos);
+    document.getElementById('kpi-tarjetas').textContent = fmt(data.tarjetasUnicas);
+    document.getElementById('kpi-prom').textContent     = data.promedio.toFixed(1);
+
+    const tipos  = data.porTipo;
+    const labels = tipos.map(t => t.nombre);
+    const usos   = tipos.map(t => t.usos);
+    const colores = tipos.map((_, i) => PALETA[i % PALETA.length]);
+
+    // ── Gráfico barras horizontales ──
+    new Chart(document.getElementById('myChart'), {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Usos',
+          data: usos,
+          backgroundColor: colores,
+          borderRadius: 5,
+          borderSkipped: false,
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: ctx => ` ${fmt(ctx.raw)} usos  (${tipos[ctx.dataIndex].pct}%)`
+            }
+          }
+        },
+        scales: {
+          x: {
+            ticks: { color: '#64748b', font: { size: 11 } },
+            grid:  { color: '#1e293b' },
+          },
+          y: {
+            ticks: { color: '#e2e8f0', font: { size: 12 } },
+            grid:  { display: false },
+          }
+        }
+      }
+    });
+
+    // ── Tabla ──
+    const tbody = document.getElementById('tabla-body');
+    tipos.forEach((t, i) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><span class="badge-tipo" style="background:${colores[i]}22;color:${colores[i]}">${t.nombre}</span></td>
+        <td class="num">${fmt(t.usos)}</td>
+        <td class="num">${fmt(t.tarjetas)}</td>
+        <td class="num">${t.promedio.toFixed(1)}</td>
+        <td class="num">${t.pct}%</td>
+        <td class="bar-cell">
+          <div class="bar-bg">
+            <div class="bar-fill" style="width:${t.pct}%;background:${colores[i]}"></div>
+          </div>
+        </td>`;
+      tbody.appendChild(tr);
+    });
+  })
+  .catch(err => {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('error-msg').style.display = 'block';
+    document.getElementById('error-msg').innerHTML =
+      `<b>⚠ Sin datos aún</b><br><br>${err.message}<br><br>
+       Ejecutá <code>python generar_estadisticas.py</code> para generar y subir los datos.`;
+  });
+</script>
+</body>
+</html>
